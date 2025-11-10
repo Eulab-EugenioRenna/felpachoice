@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { OrderCard } from './OrderCard';
 import type { Order } from '@/lib/types';
-import { Search, ListFilter, Briefcase, Ruler, X, Tag } from 'lucide-react';
+import { Search, ListFilter, Briefcase, Ruler, X } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -61,6 +61,9 @@ export default function OrderListClient({ orders: initialOrders }: { orders: Ord
         
         if (order.request.service) serviceSummary[order.request.service] = (serviceSummary[order.request.service] || 0) + 1;
         if (order.request.size) sizeSummary[order.request.size] = (sizeSummary[order.request.size] || 0) + 1;
+        
+        if(order.request.sweatshirtType === 'default') typeSet.add('sweatshirt');
+        if(order.request.sweatshirtType === 'zip') typeSet.add('jacket');
 
       }
     });
@@ -99,30 +102,38 @@ export default function OrderListClient({ orders: initialOrders }: { orders: Ord
 
       if (!searchMatch) return false;
 
-      // Check if order has any item matching all active filters
+      // Check if order matches active filters
       const filterMatch = Object.entries(filters).every(([category, values]) => {
         if (values.length === 0) return true;
         
+        // New order format with items array
         if (order.request.items && order.request.items.length > 0) {
             return order.request.items.some(item => {
                 if (category === 'brand') return values.includes(item.productId.includes('payper') ? 'PAYPER' : 'JHK');
                 if (category === 'type') return values.includes(item.category);
                 if (category === 'size') return values.includes(item.size);
                 if (category === 'service') return values.includes(item.service);
-                return true;
+                return false; // Should not happen
             });
         }
         
         // Legacy order format check
-        if (category === 'size') return values.includes(order.request.size!);
-        if (category === 'service') return values.includes(order.request.service!);
-        // Legacy orders don't have brand or explicit type in the same way.
-        if (category === 'type') {
-            if (order.request.sweatshirtType === 'default' && values.includes('sweatshirt')) return true;
-            if (order.request.sweatshirtType === 'zip' && values.includes('jacket')) return true;
+        const cat = category as FilterCategory;
+        switch(cat) {
+            case 'size':
+                return order.request.size ? values.includes(order.request.size) : false;
+            case 'service':
+                return order.request.service ? values.includes(order.request.service) : false;
+            case 'type':
+                if (order.request.sweatshirtType === 'default' && values.includes('sweatshirt')) return true;
+                if (order.request.sweatshirtType === 'zip' && values.includes('jacket')) return true;
+                return false;
+            case 'brand':
+                // Legacy orders don't have brand info, so they don't match if brand filter is active
+                return false;
+            default:
+                return false;
         }
-
-        return false;
       });
 
       return filterMatch;
