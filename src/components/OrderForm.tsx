@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { OrderItem, Product } from '@/lib/types';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const products: Product[] = [
     {
@@ -82,6 +83,27 @@ export function OrderForm() {
   const selectedProduct = useMemo(() => {
     return products.find(p => p.id === currentItem.productId);
   }, [currentItem.productId]);
+
+  const currentImage = useMemo(() => {
+    if (!selectedProduct) return null;
+
+    const service = currentItem.service;
+    if (service && service !== 'none') {
+      const category = selectedProduct.category === 'jacket' ? 'zip' : 'default';
+      const imageKey = `${category}-${service}`;
+      const serviceImage = PlaceHolderImages.find(img => img.id === imageKey);
+      if (serviceImage) {
+        return serviceImage;
+      }
+    }
+    
+    return {
+        imageUrl: selectedProduct.imageUrl,
+        imageHint: selectedProduct.imageHint,
+        description: selectedProduct.name,
+    };
+  }, [currentItem.service, selectedProduct]);
+
 
   const total = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   
@@ -165,15 +187,15 @@ export function OrderForm() {
           <CardContent className="space-y-4">
             {showItemForm && (
                 <div className="p-4 border rounded-lg space-y-4 bg-muted/50">
-                    {selectedProduct && (
+                    {currentImage && (
                         <div className="flex justify-center my-4">
                             <Image
-                                src={selectedProduct.imageUrl}
-                                alt={selectedProduct.name}
+                                src={currentImage.imageUrl}
+                                alt={currentImage.description}
                                 width={200}
                                 height={200}
                                 className="h-48 w-auto object-contain transition-all duration-300"
-                                data-ai-hint={selectedProduct.imageHint}
+                                data-ai-hint={currentImage.imageHint}
                             />
                         </div>
                     )}
