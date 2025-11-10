@@ -1,7 +1,7 @@
 import { getOrders } from '@/lib/pocketbase';
 import OrderListClient from './OrderListClient';
 import type { Order } from '@/lib/types';
-import type { SweatshirtType } from '@/lib/types';
+import type { Product } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -10,13 +10,13 @@ export default async function OrdersPage({
 }: {
   searchParams?: {
     search?: string;
-    type?: SweatshirtType | string;
+    category?: Product['category'] | 'all';
   };
 }) {
   const search = searchParams?.search || '';
-  const type = searchParams?.type || '';
+  const category = searchParams?.category === 'all' ? '' : searchParams?.category || '';
 
-  const orders: Order[] = await getOrders(search, type);
+  const orders: Order[] = await getOrders(search, category);
 
   return (
     <div className="container mx-auto py-8 md:py-12 px-4">

@@ -5,7 +5,7 @@ import { useDebouncedCallback } from 'use-debounce';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { OrderCard } from './OrderCard';
-import type { Order, SweatshirtType } from '@/lib/types';
+import type { Order } from '@/lib/types';
 import { Search, ListFilter, Briefcase, Ruler } from 'lucide-react';
 import {
   DropdownMenu,
@@ -24,7 +24,7 @@ export default function OrderListClient({ orders }: { orders: Order[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const currentType = searchParams.get('type');
+  const currentCategory = searchParams.get('category');
 
   const handleSearch = useDebouncedCallback((term: string) => {
     const params = new URLSearchParams(searchParams);
@@ -36,12 +36,12 @@ export default function OrderListClient({ orders }: { orders: Order[] }) {
     router.replace(`${pathname}?${params.toString()}`);
   }, 300);
 
-  const handleFilterChange = (type: SweatshirtType | 'all') => {
+  const handleFilterChange = (category: 'sweatshirt' | 'jacket' | 'all') => {
     const params = new URLSearchParams(searchParams);
-    if (type === 'all') {
-      params.delete('type');
+    if (category === 'all') {
+      params.delete('category');
     } else {
-      params.set('type', type);
+      params.set('category', category);
     }
     router.replace(`${pathname}?${params.toString()}`);
   };
@@ -72,6 +72,12 @@ export default function OrderListClient({ orders }: { orders: Order[] }) {
     return acc;
   }, {} as Record<string, number>);
 
+  const getFilterLabel = () => {
+    if (currentCategory === 'sweatshirt') return 'Felpa';
+    if (currentCategory === 'jacket') return 'Giacca';
+    return 'Tutti i tipi';
+  }
+
   return (
     <div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -98,7 +104,7 @@ export default function OrderListClient({ orders }: { orders: Order[] }) {
                   </CardTitle>
               </CardHeader>
               <CardContent className="flex flex-wrap gap-2">
-                   {Object.entries(sizeSummary).map(([size, count]) => (
+                   {Object.entries(sizeSummary).sort(([a], [b]) => a.localeCompare(b)).map(([size, count]) => (
                       <Badge key={size} variant="secondary" className="text-base">
                           {size}: {count}
                       </Badge>
@@ -113,7 +119,7 @@ export default function OrderListClient({ orders }: { orders: Order[] }) {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Cerca per nome, telefono o servizio..."
+            placeholder="Cerca per nome, telefono, articolo o servizio..."
             className="pl-10 h-12 w-full"
             onChange={(e) => handleSearch(e.target.value)}
             defaultValue={searchParams.get('search')?.toString()}
@@ -125,17 +131,17 @@ export default function OrderListClient({ orders }: { orders: Order[] }) {
              <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="w-full md:w-auto justify-between h-12">
-                  <span>{currentType === 'default' ? 'Felpa Ufficiale' : currentType === 'zip' ? 'Felpa + Giacca' : 'Tutti i tipi'}</span>
+                  <span>{getFilterLabel()}</span>
                   <ListFilter className="ml-2 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuLabel>Tipo di Felpa</DropdownMenuLabel>
+                <DropdownMenuLabel>Tipo di Prodotto</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuRadioGroup value={currentType || 'all'} onValueChange={(value) => handleFilterChange(value as SweatshirtType | 'all')}>
+                <DropdownMenuRadioGroup value={currentCategory || 'all'} onValueChange={(value) => handleFilterChange(value as 'sweatshirt' | 'jacket' | 'all')}>
                   <DropdownMenuRadioItem value="all">Tutti</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="default">Felpa Ufficiale</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="zip">Felpa + Giacca</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="sweatshirt">Felpa</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="jacket">Giacca</DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
             </DropdownMenu>

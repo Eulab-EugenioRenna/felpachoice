@@ -1,26 +1,25 @@
-import { Order, SweatshirtType, ServiceType } from './types';
+import { Order, Product } from './types';
 
 const POCKETBASE_URL = 'https://pocketbase.eulab.cloud';
 const COLLECTION = 'pdg_servizio_felpa';
 
 export async function getOrders(
   search?: string,
-  sweatshirtType?: SweatshirtType | string,
-  service?: string,
+  category?: Product['category'] | '',
 ): Promise<Order[]> {
   const filterParts: string[] = [];
+
   if (search) {
     // PocketBase uses `~` for LIKE operator
-    // Search in new and old data structures
-    filterParts.push(`(request.name ~ "${search}" || request.phone ~ "${search}" || request.items.productName ~ "${search}")`);
+    // Search in name, phone, and within the items for product name or service
+    const searchFilter = `(request.name ~ "${search}" || request.phone ~ "${search}" || request.items.productName ~ "${search}" || request.items.service ~ "${search}" || request.service ~ "${search}")`
+    filterParts.push(searchFilter);
   }
-  if (sweatshirtType && (sweatshirtType === 'default' || sweatshirtType === 'zip')) {
-    // This filter only works for legacy orders
-    filterParts.push(`request.sweatshirtType = "${sweatshirtType}"`);
-  }
-   if (service) {
-    // Search in new and old data structures
-    filterParts.push(`(request.service ~ "${service}" || request.items.service ~ "${service}")`);
+
+  if (category) {
+    // Filter by item category for new orders
+    const categoryFilter = `(request.items.category ~ "${category}")`;
+    filterParts.push(categoryFilter);
   }
 
   const filter = filterParts.join(' && ');
@@ -32,6 +31,9 @@ export async function getOrders(
     url.searchParams.set('filter', filter);
   }
   url.searchParams.set('sort', '-created');
+  // Expand items to allow filtering by category
+  url.searchParams.set('expand', 'request.items'); 
+
 
   try {
     const response = await fetch(url.toString(), {
