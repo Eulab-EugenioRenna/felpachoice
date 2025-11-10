@@ -13,7 +13,9 @@ const orderSchema = z.object({
     required_error: 'Devi selezionare un tipo di felpa.',
   }),
   size: z.string().min(1, { message: 'La taglia è obbligatoria.' }),
-  service: z.enum(['media', 'welcome', 'security', 'kids']).optional(),
+  service: z.enum(['media', 'welcome', 'security', 'kids'], {
+    required_error: 'Devi selezionare un servizio.',
+  }),
 });
 
 export type State = {

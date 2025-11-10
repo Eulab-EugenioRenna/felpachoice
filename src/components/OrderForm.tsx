@@ -175,7 +175,7 @@ export function OrderForm() {
             <Label htmlFor="service" className="text-lg font-semibold mb-2 block">Servizio Svolto</Label>
             <div className="relative">
               <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
-                <Select name="service" onValueChange={setService}>
+                <Select name="service" onValueChange={setService} required>
                   <SelectTrigger className="pl-10 h-12">
                     <SelectValue placeholder="Seleziona un servizio" />
                   </SelectTrigger>
