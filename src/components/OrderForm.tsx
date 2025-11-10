@@ -171,6 +171,7 @@ export function OrderForm() {
                     <SelectItem value="media">media</SelectItem>
                     <SelectItem value="welcome">welcome</SelectItem>
                     <SelectItem value="security">security</SelectItem>
+                    <SelectItem value="kids">kids</SelectItem>
                   </SelectContent>
                 </Select>
             </div>
