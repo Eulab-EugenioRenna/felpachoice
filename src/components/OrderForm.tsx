@@ -137,7 +137,7 @@ export function OrderForm() {
         <Label htmlFor="service" className="text-lg font-semibold mb-2 block">Servizio</Label>
         <div className="relative">
           <Briefcase className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground" />
-          <Textarea id="service" name="service" placeholder="Descrivi il servizio richiesto (es. ricamo personalizzato, patch, etc.)" className="pl-10" />
+          <Textarea id="service" name="service" placeholder="Descrivi il servizio svolto (es. ricamo personalizzato, patch, etc.)" className="pl-10" />
         </div>
         {state.errors?.service && <p className="text-sm font-medium text-destructive">{state.errors.service}</p>}
       </div>

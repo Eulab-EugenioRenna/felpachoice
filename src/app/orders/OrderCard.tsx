@@ -44,7 +44,7 @@ export function OrderCard({ order }: { order: Order }) {
           <div className="flex items-start gap-2 text-sm text-muted-foreground">
               <Briefcase className="w-4 h-4 mt-0.5 shrink-0" />
               <div>
-                  <span>Servizio Richiesto:</span>
+                  <span>Servizio Svolto:</span>
                   <p className="font-semibold text-foreground">{service}</p>
               </div>
           </div>
