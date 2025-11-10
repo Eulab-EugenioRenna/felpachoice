@@ -63,7 +63,7 @@ export default function OrderListClient({ orders: initialOrders }: { orders: Ord
         if (order.request.size) sizeSummary[order.request.size] = (sizeSummary[order.request.size] || 0) + 1;
         
         if(order.request.sweatshirtType === 'default') typeSet.add('sweatshirt');
-        if(order.request.sweatshirtType === 'zip') typeSet.add('jacket');
+        else if(order.request.sweatshirtType === 'zip') typeSet.add('jacket');
 
       }
     });
@@ -93,7 +93,7 @@ export default function OrderListClient({ orders: initialOrders }: { orders: Ord
     return initialOrders.filter(order => {
       const searchMatch = !searchTerm ||
         order.request.name.toLowerCase().includes(searchTerm) ||
-        order.request.phone.toLowerCase().includes(searchTerm) ||
+        (order.request.phone && order.request.phone.toLowerCase().includes(searchTerm)) ||
         (order.request.items && order.request.items.some(item => 
           item.productName.toLowerCase().includes(searchTerm) ||
           item.service.toLowerCase().includes(searchTerm)
