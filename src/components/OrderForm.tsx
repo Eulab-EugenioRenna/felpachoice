@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { useFormState, useFormStatus } from 'react-dom';
+import { useEffect, useRef, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import Image from 'next/image';
 import { Loader2, User, Phone } from 'lucide-react';
 import { submitOrder, type State } from '@/app/actions';
@@ -9,10 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { cn } from '@/lib/utils';
 
 const sweatshirtOptions = [
   {
@@ -46,7 +45,7 @@ function SubmitButton() {
 
 export function OrderForm() {
   const initialState: State = { message: null, errors: {}, success: false };
-  const [state, dispatch] = useFormState(submitOrder, initialState);
+  const [state, dispatch] = useActionState(submitOrder, initialState);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
 
