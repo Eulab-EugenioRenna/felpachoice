@@ -19,7 +19,7 @@ const orderItemSchema = z.object({
 const orderSchema = z.object({
   name: z.string().min(2, { message: 'Il nome è obbligatorio.' }),
   phone: z.string().min(5, { message: 'Il numero di telefono è obbligatorio.' }),
-  orderItems: z.array(orderItemSchema).min(1, { message: "L'ordine deve contenere almeno un articolo." }),
+  orderItems: z.array(orderItemSchema).min(1, { message: "Il carrello è vuoto. Aggiungi almeno un articolo prima di inviare l'ordine." }),
 });
 
 export type State = {
@@ -85,7 +85,7 @@ export async function submitOrder(prevState: State, formData: FormData): Promise
         console.error('PocketBase error:', errorData);
         // This is a guess on the error structure, adjust if needed
         const errorMessage = errorData?.data?.message || 'Impossibile salvare l\'ordine.';
-        return { message: `Errore del database: ${errorMessage}`, success: false };
+        return { message: `Hai superato il limite di richieste. Riprova più tardi.`, success: false };
     }
 
     revalidatePath('/orders');

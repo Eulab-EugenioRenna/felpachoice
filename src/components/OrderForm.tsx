@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useActionState, useState, useMemo } from 'react';
-import { useFormStatus } from 'react-dom';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import Image from 'next/image';
 import { Loader2, User, Phone, ShoppingCart, XCircle, PlusCircle, Trash2 } from 'lucide-react';
 import { submitOrder, type State } from '@/app/actions';
@@ -50,10 +49,17 @@ const products: Product[] = [
 const services = ['media', 'welcome', 'security', 'kids'];
 const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
+function SubmitButton({ onClick }: { onClick: (e: React.MouseEvent<HTMLButtonElement>) => void }) {
+  const [pending, setPending] = useState(false);
+  
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    setPending(true);
+    onClick(e);
+    // The form submission will start, we can reset pending state in a parent component effect if needed
+  };
+
   return (
-    <Button type="submit" disabled={pending} className="w-full text-lg py-6">
+    <Button type="submit" disabled={pending} onClick={handleClick} className="w-full text-lg py-6">
       {pending ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Inviando...
@@ -67,7 +73,7 @@ function SubmitButton() {
 
 export function OrderForm() {
   const initialState: State = { message: null, errors: {}, success: false };
-  const [state, dispatch] = useActionState(submitOrder, initialState);
+  const [state, setState] = useState(initialState);
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
   
@@ -97,12 +103,6 @@ export function OrderForm() {
       }
     }
     
-    // Fallback to product image if no service-specific image is found
-    const defaultImage = PlaceHolderImages.find(p => p.id === (selectedProduct.category === 'jacket' ? 'zip-none' : 'default-none'));
-    if (defaultImage) {
-        return defaultImage;
-    }
-
     return {
         imageUrl: selectedProduct.imageUrl,
         imageHint: selectedProduct.imageHint,
@@ -138,6 +138,23 @@ export function OrderForm() {
   const handleRemoveItem = (index: number) => {
     setOrderItems(orderItems.filter((_, i) => i !== index));
   };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    if (showItemForm) {
+      toast({
+        title: "Articolo non aggiunto",
+        description: "Hai un articolo in fase di compilazione. Aggiungilo al carrello o annulla prima di inviare l'ordine.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const formData = new FormData(formRef.current!);
+    const result = await submitOrder(state, formData);
+    setState(result);
+  };
   
   useEffect(() => {
     if (state.message) {
@@ -148,18 +165,27 @@ export function OrderForm() {
         });
         formRef.current?.reset();
         setOrderItems([]);
+        setState(initialState);
       } else {
         toast({
           title: 'Errore',
-          description: state.message,
+          description: state.message || (state.errors?.orderItems?.[0] ?? 'Si è verificato un errore.'),
           variant: 'destructive',
         });
+        setState(s => ({ ...s, message: null })); // Clear message after showing toast
       }
+    } else if (state.errors?.orderItems) {
+         toast({
+          title: 'Errore',
+          description: state.errors.orderItems[0],
+          variant: 'destructive',
+        });
+        setState(s => ({ ...s, errors: {...s.errors, orderItems: undefined} })); // Clear error after showing toast
     }
   }, [state, toast]);
 
   return (
-    <form ref={formRef} action={dispatch} className="space-y-8">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-8">
        {/* Hidden input to pass orderItems to server action */}
       <input type="hidden" name="orderItems" value={JSON.stringify(orderItems)} />
       
@@ -287,7 +313,7 @@ export function OrderForm() {
                 )}
             </div>
 
-            {state.errors?.orderItems && <p className="text-sm font-medium text-destructive">{state.errors.orderItems}</p>}
+            {state.errors?.orderItems && !state.message && <p className="text-sm font-medium text-destructive">{state.errors.orderItems}</p>}
           </CardContent>
       </Card>
       
@@ -298,7 +324,9 @@ export function OrderForm() {
         </div>
       </div>
       
-      <SubmitButton />
+       <Button type="submit" className="w-full text-lg py-6">
+        Invia Ordine
+      </Button>
     </form>
   );
 }
