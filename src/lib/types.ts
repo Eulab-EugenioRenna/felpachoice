@@ -26,6 +26,8 @@ export interface Order {
   collectionName: string;
   created: string;
   updated: string;
+  paid: boolean;
+  paid_at: string;
   request: {
     name: string;
     phone: string;

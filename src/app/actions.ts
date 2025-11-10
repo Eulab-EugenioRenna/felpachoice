@@ -70,6 +70,8 @@ export async function submitOrder(prevState: State, formData: FormData): Promise
       items: orderItems,
       total,
     },
+    paid: false,
+    paid_at: null,
   };
   
   try {
@@ -90,9 +92,37 @@ export async function submitOrder(prevState: State, formData: FormData): Promise
     }
 
     revalidatePath('/orders');
+    revalidatePath('/payments');
     return { message: 'Ordine creato con successo!', success: true };
   } catch (error) {
     console.error('Network error:', error);
     return { message: 'Errore di rete: Impossibile connettersi al database.', success: false };
   }
+}
+
+
+export async function markAsPaid(orderId: string): Promise<{ success: boolean; message: string; }> {
+    try {
+        const response = await fetch(`${POCKETBASE_URL}/api/collections/${COLLECTION}/records/${orderId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                paid: true,
+                paid_at: new Date().toISOString(),
+            }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('PocketBase error:', errorData);
+            return { success: false, message: 'Impossibile aggiornare l\'ordine.' };
+        }
+        
+        revalidatePath('/payments');
+        return { success: true, message: 'Ordine segnato come pagato!' };
+
+    } catch (error) {
+        console.error('Network error:', error);
+        return { success: false, message: 'Errore di rete, impossibile aggiornare lo stato.' };
+    }
 }
