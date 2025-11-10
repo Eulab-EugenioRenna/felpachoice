@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { OrderCard } from './OrderCard';
 import type { Order } from '@/lib/types';
-import { Search, ListFilter, Briefcase, Ruler, X } from 'lucide-react';
+import { Search, ListFilter, Briefcase, Ruler, X, ShoppingCart, Euro } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -51,8 +51,8 @@ export default function OrderListClient({ orders: initialOrders }: { orders: Ord
           if (item.category) {
             typeSet.add(item.category);
           }
-          sizeSet.add(item.size);
-          serviceSet.add(item.service);
+          if(item.size) sizeSet.add(item.size);
+          if(item.service) serviceSet.add(item.service);
           
           serviceSummary[item.service] = (serviceSummary[item.service] || 0) + item.quantity;
           sizeSummary[item.size] = (sizeSummary[item.size] || 0) + item.quantity;
@@ -144,6 +144,17 @@ export default function OrderListClient({ orders: initialOrders }: { orders: Ord
       return filterMatch;
     });
   }, [initialOrders, searchTerm, filters]);
+
+  const { filteredTotalAmount, filteredCount } = useMemo(() => {
+    const total = filteredOrders.reduce((sum, order) => {
+      return sum + (order.request.total ?? order.request.price ?? 0);
+    }, 0);
+    return {
+      filteredTotalAmount: total,
+      filteredCount: filteredOrders.length,
+    };
+  }, [filteredOrders]);
+
 
   const activeFilterCount = Object.values(filters).reduce((acc, v) => acc + v.length, 0);
 
@@ -250,7 +261,24 @@ export default function OrderListClient({ orders: initialOrders }: { orders: Ord
             )}
         </CardContent>
       </Card>
-
+      
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle>Riepilogo Selezione</CardTitle>
+        </CardHeader>
+        <CardContent className="flex justify-between items-center">
+            <div className="flex items-center gap-2 text-lg">
+                <ShoppingCart className="w-5 h-5" />
+                <span>Ordini Trovati:</span>
+                <span className="font-bold">{filteredCount}</span>
+            </div>
+            <div className="flex items-center gap-2 text-lg">
+                <Euro className="w-5 h-5" />
+                <span>Valore Totale:</span>
+                <span className="font-bold">€{filteredTotalAmount.toFixed(2)}</span>
+            </div>
+        </CardContent>
+      </Card>
 
       {filteredOrders.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
