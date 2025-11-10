@@ -47,14 +47,28 @@ export default function OrderListClient({ orders }: { orders: Order[] }) {
   };
 
   const serviceSummary = orders.reduce((acc, order) => {
-    const service = order.request.service || 'Nessuno';
-    acc[service] = (acc[service] || 0) + 1;
+    if (order.request.items && Array.isArray(order.request.items)) {
+      order.request.items.forEach(item => {
+        const service = item.service || 'Nessuno';
+        acc[service] = (acc[service] || 0) + item.quantity;
+      });
+    } else if (order.request.service) { // Legacy format
+      const service = order.request.service || 'Nessuno';
+      acc[service] = (acc[service] || 0) + 1;
+    }
     return acc;
   }, {} as Record<string, number>);
 
   const sizeSummary = orders.reduce((acc, order) => {
-    const size = order.request.size;
-    acc[size] = (acc[size] || 0) + 1;
+    if (order.request.items && Array.isArray(order.request.items)) {
+      order.request.items.forEach(item => {
+        const size = item.size || 'N/A';
+        acc[size] = (acc[size] || 0) + item.quantity;
+      });
+    } else if (order.request.size) { // Legacy format
+      const size = order.request.size || 'N/A';
+      acc[size] = (acc[size] || 0) + 1;
+    }
     return acc;
   }, {} as Record<string, number>);
 
