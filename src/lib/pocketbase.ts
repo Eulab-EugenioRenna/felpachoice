@@ -10,15 +10,17 @@ export async function getOrders(
   const filterParts: string[] = [];
 
   if (search) {
-    // PocketBase uses `~` for LIKE operator
-    // Search in name, phone, and within the items for product name or service for both legacy and new formats.
-    const searchFilter = `(request.name ~ "${search}" || request.phone ~ "${search}" || request.items.productName ~ "${search}" || request.items.service ~ "${search}" || request.service ~ "${search}")`
+    // PocketBase uses `~` for LIKE operator.
+    // To search within a JSON array, you use the `collection.field:each ~ "value"` syntax.
+    // We create a group of OR conditions to search across multiple fields.
+    const searchFilter = `(request.name ~ "${search}" || request.phone ~ "${search}" || request.items.productName:each ~ "${search}" || request.items.service:each ~ "${search}" || request.service ~ "${search}")`;
     filterParts.push(searchFilter);
   }
 
   if (category) {
-    // Filter by item category. This works for the new format where items is an array of objects.
-    const categoryFilter = `request.items.category = "${category}"`;
+    // To filter records where at least one item in the JSON array matches the category,
+    // we use the `collection.field:each = "value"` syntax.
+    const categoryFilter = `request.items.category:each = "${category}"`;
     filterParts.push(categoryFilter);
   }
 
