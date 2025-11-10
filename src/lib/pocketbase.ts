@@ -11,13 +11,16 @@ export async function getOrders(
   const filterParts: string[] = [];
   if (search) {
     // PocketBase uses `~` for LIKE operator
-    filterParts.push(`(request.name ~ "${search}" || request.phone ~ "${search}")`);
+    // Search in new and old data structures
+    filterParts.push(`(request.name ~ "${search}" || request.phone ~ "${search}" || request.items.productName ~ "${search}")`);
   }
   if (sweatshirtType && (sweatshirtType === 'default' || sweatshirtType === 'zip')) {
+    // This filter only works for legacy orders
     filterParts.push(`request.sweatshirtType = "${sweatshirtType}"`);
   }
    if (service) {
-    filterParts.push(`request.service ~ "${service}"`);
+    // Search in new and old data structures
+    filterParts.push(`(request.service ~ "${service}" || request.items.service ~ "${service}")`);
   }
 
   const filter = filterParts.join(' && ');

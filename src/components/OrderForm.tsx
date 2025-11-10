@@ -1,19 +1,17 @@
 'use client';
 
-import { useEffect, useRef, useActionState, useState } from 'react';
+import { useEffect, useRef, useActionState } from 'react';
 import { useFormStatus } from 'react-dom';
 import Image from 'next/image';
-import { Loader2, User, Phone, Briefcase, Info, Shirt, Ruler } from 'lucide-react';
+import { Loader2, User, Phone, Briefcase, Ruler, PlusCircle, XCircle, Trash2, ShoppingCart } from 'lucide-react';
 import { submitOrder, type State } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
-import type { SweatshirtType } from '@/lib/types';
 import {
   Select,
   SelectContent,
@@ -21,22 +19,38 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useState } from 'react';
+import type { OrderItem, Product } from '@/lib/types';
 
+const products: Product[] = [
+    {
+      id: 'jhk-sweatshirt',
+      name: 'Felpa Ufficiale - JHK',
+      price: 12,
+      imageUrl: '/images/default-sweatshirt.png',
+      imageHint: 'green sweatshirt',
+      category: 'sweatshirt',
+    },
+    {
+      id: 'payper-sweatshirt',
+      name: 'Felpa Ufficiale - PAYPER',
+      price: 15,
+      imageUrl: '/images/default-sweatshirt.png',
+      imageHint: 'green sweatshirt',
+      category: 'sweatshirt',
+    },
+    {
+      id: 'payper-jacket',
+      name: 'Giacca Ufficiale - PAYPER',
+      price: 28,
+      imageUrl: '/images/zip-sweatshirt.png',
+      imageHint: 'zip sweatshirt',
+      category: 'jacket',
+    },
+];
 
-const sweatshirtOptions = {
-  default: {
-    type: 'default' as SweatshirtType,
-    name: 'Felpa Ufficiale',
-    price: 15,
-  },
-  zip: {
-    type: 'zip' as SweatshirtType,
-    name: 'Felpa Ufficiale + Giacca',
-    price: 43,
-  },
-};
-
-const services = ['media', 'welcome', 'security', 'kids'];
+const services = ['media', 'welcome', 'security', 'kids', 'none'];
+const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -59,23 +73,43 @@ export function OrderForm() {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
   
-  const [sweatshirtType, setSweatshirtType] = useState<SweatshirtType>('default');
-  const [service, setService] = useState<string | undefined>(undefined);
-  const [total, setTotal] = useState(sweatshirtOptions.default.price);
+  const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [showItemForm, setShowItemForm] = useState(false);
+  const [currentItem, setCurrentItem] = useState<Partial<OrderItem>>({
+    productId: 'jhk-sweatshirt',
+    quantity: 1,
+    size: 'M',
+    service: 'none',
+  });
 
-  const currentSweatshirt = sweatshirtOptions[sweatshirtType];
+  const total = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  
+  const handleAddOrUpdateItem = () => {
+    const product = products.find(p => p.id === currentItem.productId);
+    if (!product || !currentItem.size || !currentItem.service || !currentItem.quantity) {
+        toast({ title: "Campi incompleti", description: "Seleziona prodotto, taglia, servizio e quantità.", variant: "destructive"});
+        return;
+    }
 
-  const getCurrentImage = (type: SweatshirtType, currentService?: string) => {
-    const serviceSuffix = currentService ? `-${currentService}` : '';
-    const imageId = `${type}${serviceSuffix}`;
-    const fallbackImageId = `${type}`;
-    return PlaceHolderImages.find((img) => img.id === imageId) || PlaceHolderImages.find((img) => img.id === fallbackImageId);
+    const newItem: OrderItem = {
+      ...currentItem,
+      productId: product.id,
+      productName: product.name,
+      price: product.price,
+      quantity: currentItem.quantity,
+      size: currentItem.size,
+      service: currentItem.service,
+    };
+    
+    setOrderItems([...orderItems, newItem]);
+    setShowItemForm(false);
+    setCurrentItem({ productId: 'jhk-sweatshirt', quantity: 1, size: 'M', service: 'none' });
+  };
+
+  const handleRemoveItem = (index: number) => {
+    setOrderItems(orderItems.filter((_, i) => i !== index));
   };
   
-  useEffect(() => {
-    setTotal(currentSweatshirt.price);
-  }, [currentSweatshirt]);
-
   useEffect(() => {
     if (state.message) {
       if (state.success) {
@@ -84,8 +118,7 @@ export function OrderForm() {
           description: state.message,
         });
         formRef.current?.reset();
-        setSweatshirtType('default');
-        setService(undefined);
+        setOrderItems([]);
       } else {
         toast({
           title: 'Errore',
@@ -98,6 +131,9 @@ export function OrderForm() {
 
   return (
     <form ref={formRef} action={dispatch} className="space-y-8">
+       {/* Hidden input to pass orderItems to server action */}
+      <input type="hidden" name="orderItems" value={JSON.stringify(orderItems)} />
+      
       <div className="space-y-4">
         <div className="relative">
           <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
@@ -112,81 +148,107 @@ export function OrderForm() {
         {state.errors?.phone && <p className="text-sm font-medium text-destructive">{state.errors.phone}</p>}
       </div>
       
-      <div>
-        <Label className="text-lg font-semibold mb-2 block">Scegli la felpa</Label>
-        <RadioGroup name="sweatshirtType" value={sweatshirtType} onValueChange={(value) => setSweatshirtType(value as SweatshirtType)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Object.values(sweatshirtOptions).map((option) => {
-            const image = getCurrentImage(option.type, service);
-            return (
-              <div key={option.type}>
-                <RadioGroupItem value={option.type} id={`sweatshirt-${option.type}`} className="sr-only" />
-                <Label htmlFor={`sweatshirt-${option.type}`}>
-                  <Card className={cn("cursor-pointer hover:border-primary transition-colors h-full", sweatshirtType === option.type && "border-primary ring-2 ring-primary")}>
-                      {image && (
-                          <CardHeader className="p-0">
-                              <Image
-                                  src={image.imageUrl}
-                                  alt={image.description}
-                                  data-ai-hint={image.imageHint}
-                                  width={400}
-                                  height={300}
-                                  className="rounded-t-lg w-full aspect-[4/3] object-contain"
-                              />
-                          </CardHeader>
-                      )}
-                     <CardContent className="p-4 space-y-1">
-                        <CardTitle className="flex items-center gap-2 text-xl">
-                          <Shirt className="w-5 h-5" />
-                          {option.name}
-                        </CardTitle>
-                        <p className="text-2xl font-bold text-primary">€{option.price.toFixed(2)}</p>
-                     </CardContent>
-                  </Card>
-                </Label>
-              </div>
-            )
-          })}
-        </RadioGroup>
-        {state.errors?.sweatshirtType && <p className="text-sm font-medium text-destructive">{state.errors.sweatshirtType}</p>}
-      </div>
+      <Card>
+          <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <ShoppingCart className="w-6 h-6" />
+                    Articoli Ordine
+                  </div>
+                   <Button type="button" size="sm" variant="outline" onClick={() => setShowItemForm(!showItemForm)}>
+                      {showItemForm ? <XCircle className="mr-2"/> : <PlusCircle className="mr-2" />}
+                      {showItemForm ? 'Annulla' : 'Aggiungi Articolo'}
+                  </Button>
+              </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {showItemForm && (
+                <div className="p-4 border rounded-lg space-y-4 bg-muted/50">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                          <Label htmlFor="product" className="font-semibold mb-2 block">Prodotto</Label>
+                          <Select
+                              name="product"
+                              value={currentItem.productId}
+                              onValueChange={(value) => setCurrentItem(prev => ({...prev, productId: value}))}
+                          >
+                              <SelectTrigger className="h-12">
+                                <SelectValue placeholder="Seleziona un prodotto" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                  {products.map(p => <SelectItem key={p.id} value={p.id}>{p.name} - €{p.price.toFixed(2)}</SelectItem>)}
+                              </SelectContent>
+                          </Select>
+                      </div>
+                       <div>
+                          <Label htmlFor="quantity" className="font-semibold mb-2 block">Quantità</Label>
+                          <Input
+                              id="quantity"
+                              type="number"
+                              min="1"
+                              value={currentItem.quantity}
+                              onChange={(e) => setCurrentItem(prev => ({...prev, quantity: parseInt(e.target.value, 10) || 1}))}
+                              className="h-12"
+                           />
+                      </div>
+                    </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-            <Label htmlFor="size" className="text-lg font-semibold mb-2 block">Taglia</Label>
-            <div className="relative">
-                <Ruler className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
-                <Select name="size" required>
-                    <SelectTrigger className="pl-10 h-12">
-                    <SelectValue placeholder="Seleziona una taglia" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="XS">XS</SelectItem>
-                        <SelectItem value="S">S</SelectItem>
-                        <SelectItem value="M">M</SelectItem>
-                        <SelectItem value="L">L</SelectItem>
-                        <SelectItem value="XL">XL</SelectItem>
-                        <SelectItem value="XXL">XXL</SelectItem>
-                    </SelectContent>
-                </Select>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <Label htmlFor="size-current" className="font-semibold mb-2 block">Taglia</Label>
+                            <Select name="size-current" value={currentItem.size} onValueChange={(value) => setCurrentItem(prev => ({...prev, size: value}))}>
+                                <SelectTrigger className="h-12">
+                                <SelectValue placeholder="Seleziona una taglia" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {sizes.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="service-current" className="font-semibold mb-2 block">Servizio Svolto</Label>
+                            <Select name="service-current" value={currentItem.service} onValueChange={(value) => setCurrentItem(prev => ({...prev, service: value}))}>
+                              <SelectTrigger className="h-12">
+                                <SelectValue placeholder="Seleziona un servizio" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {services.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                     <Button type="button" onClick={handleAddOrUpdateItem} className="w-full">Aggiungi al Carrello</Button>
+                </div>
+            )}
+             
+            <div className="space-y-2">
+                {orderItems.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 border rounded-md bg-background">
+                       <div className="flex-grow">
+                          <p className="font-semibold">{item.productName} (x{item.quantity})</p>
+                          <p className="text-sm text-muted-foreground">Taglia: {item.size}, Servizio: {item.service}</p>
+                       </div>
+                       <div className="flex items-center gap-4">
+                           <p className="font-semibold">€{(item.price * item.quantity).toFixed(2)}</p>
+                           <Button type="button" variant="ghost" size="icon" onClick={() => handleRemoveItem(index)}>
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                           </Button>
+                       </div>
+                    </div>
+                ))}
+                {orderItems.length === 0 && !showItemForm && (
+                     <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                        <p className="text-muted-foreground">Il carrello è vuoto.</p>
+                        <p className="text-sm text-muted-foreground">
+                            Clicca su "Aggiungi Articolo" per iniziare.
+                        </p>
+                    </div>
+                )}
             </div>
-            {state.errors?.size && <p className="text-sm font-medium text-destructive">{state.errors.size}</p>}
-        </div>
-        <div>
-            <Label htmlFor="service" className="text-lg font-semibold mb-2 block">Servizio Svolto</Label>
-            <div className="relative">
-              <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
-                <Select name="service" onValueChange={setService} required>
-                  <SelectTrigger className="pl-10 h-12">
-                    <SelectValue placeholder="Seleziona un servizio" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {services.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-            </div>
-            {state.errors?.service && <p className="text-sm font-medium text-destructive">{state.errors.service}</p>}
-        </div>
-      </div>
+
+            {state.errors?.orderItems && <p className="text-sm font-medium text-destructive">{state.errors.orderItems}</p>}
+          </CardContent>
+      </Card>
       
       <div className="space-y-4 rounded-lg bg-muted/50 p-4">
         <div className="flex justify-between items-center text-lg font-semibold">
