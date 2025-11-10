@@ -59,6 +59,18 @@
       "description": "Una felpa con cerniera di colore blu scuro per il servizio kids.",
       "imageUrl": "/images/zip-kids-sweatshirt.png",
       "imageHint": "zip sweatshirt balloon"
+    },
+    {
+      "id": "default-none",
+      "description": "Una felpa standard di colore verde.",
+      "imageUrl": "/images/default-sweatshirt.png",
+      "imageHint": "green sweatshirt"
+    },
+    {
+      "id": "zip-none",
+      "description": "Una felpa di colore blu scuro con cerniera.",
+      "imageUrl": "/images/zip-sweatshirt.png",
+      "imageHint": "zip sweatshirt"
     }
   ]
 }
