@@ -47,7 +47,7 @@ const products: Product[] = [
     },
 ];
 
-const services = ['media', 'welcome', 'security', 'kids', 'none'];
+const services = ['media', 'welcome', 'security', 'kids'];
 const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 
 function SubmitButton() {
@@ -77,7 +77,7 @@ export function OrderForm() {
     productId: 'jhk-sweatshirt',
     quantity: 1,
     size: 'M',
-    service: 'none',
+    service: 'media',
   });
 
   const selectedProduct = useMemo(() => {
@@ -88,7 +88,7 @@ export function OrderForm() {
     if (!selectedProduct) return null;
 
     const service = currentItem.service;
-    if (service && service !== 'none') {
+    if (service) {
       const category = selectedProduct.category === 'jacket' ? 'zip' : 'default';
       const imageKey = `${category}-${service}`;
       const serviceImage = PlaceHolderImages.find(img => img.id === imageKey);
@@ -97,6 +97,12 @@ export function OrderForm() {
       }
     }
     
+    // Fallback to product image if no service-specific image is found
+    const defaultImage = PlaceHolderImages.find(p => p.id === (selectedProduct.category === 'jacket' ? 'zip-none' : 'default-none'));
+    if (defaultImage) {
+        return defaultImage;
+    }
+
     return {
         imageUrl: selectedProduct.imageUrl,
         imageHint: selectedProduct.imageHint,
@@ -126,7 +132,7 @@ export function OrderForm() {
     
     setOrderItems([...orderItems, newItem]);
     setShowItemForm(false);
-    setCurrentItem({ productId: 'jhk-sweatshirt', quantity: 1, size: 'M', service: 'none' });
+    setCurrentItem({ productId: 'jhk-sweatshirt', quantity: 1, size: 'M', service: 'media' });
   };
 
   const handleRemoveItem = (index: number) => {

@@ -1,18 +1,6 @@
 {
   "placeholderImages": [
     {
-      "id": "default",
-      "description": "Una felpa standard di colore verde.",
-      "imageUrl": "/images/default-sweatshirt.png",
-      "imageHint": "green sweatshirt"
-    },
-    {
-      "id": "zip",
-      "description": "Una felpa di colore blu scuro con cerniera.",
-      "imageUrl": "/images/zip-sweatshirt.png",
-      "imageHint": "zip sweatshirt"
-    },
-    {
       "id": "default-media",
       "description": "Una felpa standard di colore verde per il servizio media.",
       "imageUrl": "/images/default-media-sweatshirt.png",
