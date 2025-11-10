@@ -12,6 +12,7 @@ export interface Order {
     name: string;
     phone: string;
     sweatshirtType: SweatshirtType;
+    size: string;
     service: string;
     price: number;
   };

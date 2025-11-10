@@ -12,6 +12,7 @@ const orderSchema = z.object({
   sweatshirtType: z.enum(['default', 'zip'], {
     required_error: 'Devi selezionare un tipo di felpa.',
   }),
+  size: z.string().min(1, { message: 'La taglia è obbligatoria.' }),
   service: z.enum(['media', 'welcome', 'security']).optional(),
 });
 
@@ -20,6 +21,7 @@ export type State = {
     name?: string[];
     phone?: string[];
     sweatshirtType?: string[];
+    size?: string[];
     service?: string[];
   };
   message?: string | null;
@@ -31,6 +33,7 @@ export async function submitOrder(prevState: State, formData: FormData): Promise
     name: formData.get('name'),
     phone: formData.get('phone'),
     sweatshirtType: formData.get('sweatshirtType'),
+    size: formData.get('size'),
     service: formData.get('service')
   });
 
@@ -42,7 +45,7 @@ export async function submitOrder(prevState: State, formData: FormData): Promise
     };
   }
   
-  const { name, phone, sweatshirtType, service } = validatedFields.data;
+  const { name, phone, sweatshirtType, size, service } = validatedFields.data;
   
   let price = 0;
   if (sweatshirtType === 'default') {
@@ -56,6 +59,7 @@ export async function submitOrder(prevState: State, formData: FormData): Promise
       name,
       phone,
       sweatshirtType,
+      size,
       service: service || '',
       price,
     },

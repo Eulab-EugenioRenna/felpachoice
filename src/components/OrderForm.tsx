@@ -3,7 +3,7 @@
 import { useEffect, useRef, useActionState, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import Image from 'next/image';
-import { Loader2, User, Phone, Briefcase, Info, Shirt } from 'lucide-react';
+import { Loader2, User, Phone, Briefcase, Info, Shirt, Ruler } from 'lucide-react';
 import { submitOrder, type State } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -138,22 +138,44 @@ export function OrderForm() {
         {state.errors?.sweatshirtType && <p className="text-sm font-medium text-destructive">{state.errors.sweatshirtType}</p>}
       </div>
 
-      <div>
-        <Label htmlFor="service" className="text-lg font-semibold mb-2 block">Servizio Svolto</Label>
-        <div className="relative">
-          <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
-            <Select name="service">
-              <SelectTrigger className="pl-10 h-12">
-                <SelectValue placeholder="Seleziona un servizio" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="media">media</SelectItem>
-                <SelectItem value="welcome">welcome</SelectItem>
-                <SelectItem value="security">security</SelectItem>
-              </SelectContent>
-            </Select>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+            <Label htmlFor="size" className="text-lg font-semibold mb-2 block">Taglia</Label>
+            <div className="relative">
+                <Ruler className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
+                <Select name="size" required>
+                    <SelectTrigger className="pl-10 h-12">
+                    <SelectValue placeholder="Seleziona una taglia" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="XS">XS</SelectItem>
+                        <SelectItem value="S">S</SelectItem>
+                        <SelectItem value="M">M</SelectItem>
+                        <SelectItem value="L">L</SelectItem>
+                        <SelectItem value="XL">XL</SelectItem>
+                        <SelectItem value="XXL">XXL</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            {state.errors?.size && <p className="text-sm font-medium text-destructive">{state.errors.size}</p>}
         </div>
-        {state.errors?.service && <p className="text-sm font-medium text-destructive">{state.errors.service}</p>}
+        <div>
+            <Label htmlFor="service" className="text-lg font-semibold mb-2 block">Servizio Svolto</Label>
+            <div className="relative">
+              <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
+                <Select name="service">
+                  <SelectTrigger className="pl-10 h-12">
+                    <SelectValue placeholder="Seleziona un servizio" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="media">media</SelectItem>
+                    <SelectItem value="welcome">welcome</SelectItem>
+                    <SelectItem value="security">security</SelectItem>
+                  </SelectContent>
+                </Select>
+            </div>
+            {state.errors?.service && <p className="text-sm font-medium text-destructive">{state.errors.service}</p>}
+        </div>
       </div>
       
       <div className="space-y-4 rounded-lg bg-muted/50 p-4">
