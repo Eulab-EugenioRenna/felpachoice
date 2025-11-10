@@ -1,3 +1,6 @@
+
+'use client';
+
 import {
   Card,
   CardContent,
@@ -11,6 +14,7 @@ import type { Order, OrderItem } from '@/lib/types';
 import { Shirt, User, Phone, Calendar, Tag, Briefcase, Ruler, ShoppingCart } from 'lucide-react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
+import { useState, useEffect } from 'react';
 
 const renderLegacyOrder = (order: Order) => {
   const { name, phone, sweatshirtType, size, service, price } = order.request;
@@ -106,8 +110,13 @@ const renderNewOrder = (order: Order) => {
 
 
 export function OrderCard({ order }: { order: Order }) {
-  const orderDate = new Date(order.created);
+  const [formattedDate, setFormattedDate] = useState('');
   const isNewOrderFormat = order.request.items && Array.isArray(order.request.items);
+
+  useEffect(() => {
+    const orderDate = new Date(order.created);
+    setFormattedDate(format(orderDate, "d MMMM yyyy 'alle' HH:mm", { locale: it }));
+  }, [order.created]);
 
   return (
     <Card className="flex flex-col h-full shadow-md hover:shadow-xl transition-shadow duration-300">
@@ -115,7 +124,7 @@ export function OrderCard({ order }: { order: Order }) {
       <CardFooter>
         <div className="flex items-center gap-2 text-xs text-muted-foreground w-full">
             <Calendar className="w-4 h-4" />
-            <span>Ordinato il: {format(orderDate, "d MMMM yyyy 'alle' HH:mm", { locale: it })}</span>
+            {formattedDate ? <span>Ordinato il: {formattedDate}</span> : <span>Caricamento data...</span>}
         </div>
       </CardFooter>
     </Card>
