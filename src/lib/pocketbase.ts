@@ -6,7 +6,7 @@ const COLLECTION = 'pdg_servizio_felpa';
 export async function getOrders(
   search?: string,
   sweatshirtType?: SweatshirtType | string,
-  serviceType?: ServiceType | string,
+  service?: string,
 ): Promise<Order[]> {
   const filterParts: string[] = [];
   if (search) {
@@ -16,8 +16,8 @@ export async function getOrders(
   if (sweatshirtType && (sweatshirtType === 'default' || sweatshirtType === 'zip')) {
     filterParts.push(`request.sweatshirtType = "${sweatshirtType}"`);
   }
-   if (serviceType && (serviceType === 'basic' || serviceType === 'premium')) {
-    filterParts.push(`request.serviceType = "${serviceType}"`);
+   if (service) {
+    filterParts.push(`request.service ~ "${service}"`);
   }
 
   const filter = filterParts.join(' && ');

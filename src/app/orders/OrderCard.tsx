@@ -13,7 +13,7 @@ import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 
 export function OrderCard({ order }: { order: Order }) {
-  const { name, phone, sweatshirtType, serviceType, price } = order.request;
+  const { name, phone, sweatshirtType, service, price } = order.request;
   const orderDate = new Date(order.created);
 
   return (
@@ -31,19 +31,24 @@ export function OrderCard({ order }: { order: Order }) {
                 </CardDescription>
             </div>
              <Badge variant={sweatshirtType === 'default' ? 'secondary' : 'default'} className="whitespace-nowrap">
-                {sweatshirtType === 'default' ? 'Default' : 'Con Zip'}
+                {sweatshirtType === 'default' ? 'Felpa' : 'Felpa+Giacca'}
             </Badge>
         </div>
       </CardHeader>
       <CardContent className="flex-grow space-y-3">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Shirt className="w-4 h-4" />
-            <span>Tipo Felpa: <span className="font-semibold text-foreground">{sweatshirtType === 'default' ? 'Standard' : 'Con Cerniera'}</span></span>
+            <span>Tipo Felpa: <span className="font-semibold text-foreground">{sweatshirtType === 'default' ? 'Felpa Ufficiale' : 'Felpa Ufficiale + Giacca'}</span></span>
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Briefcase className="w-4 h-4" />
-            <span>Servizio: <span className="font-semibold text-foreground">{serviceType === 'basic' ? 'Base' : 'Premium'}</span></span>
-        </div>
+        {service && (
+          <div className="flex items-start gap-2 text-sm text-muted-foreground">
+              <Briefcase className="w-4 h-4 mt-0.5 shrink-0" />
+              <div>
+                  <span>Servizio Richiesto:</span>
+                  <p className="font-semibold text-foreground">{service}</p>
+              </div>
+          </div>
+        )}
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Tag className="w-4 h-4" />
             <span>Prezzo Totale: <span className="font-semibold text-foreground">€{price.toFixed(2)}</span></span>

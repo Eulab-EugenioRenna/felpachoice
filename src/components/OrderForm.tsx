@@ -3,7 +3,7 @@
 import { useEffect, useRef, useActionState, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import Image from 'next/image';
-import { Loader2, User, Phone, Briefcase, Info } from 'lucide-react';
+import { Loader2, User, Phone, Briefcase, Info, Shirt } from 'lucide-react';
 import { submitOrder, type State } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,39 +12,24 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import type { ServiceType } from '@/lib/types';
+import type { SweatshirtType } from '@/lib/types';
+import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 
 
 const sweatshirtOptions = {
   default: {
-    type: 'default',
-    name: 'Felpa Standard',
+    type: 'default' as SweatshirtType,
+    name: 'Felpa Ufficiale',
     price: 15,
     image: PlaceHolderImages.find((img) => img.id === 'default-sweatshirt'),
   },
   zip: {
-    type: 'zip',
-    name: 'Felpa con Zip',
+    type: 'zip' as SweatshirtType,
+    name: 'Felpa Ufficiale + Giacca',
     price: 28,
     image: PlaceHolderImages.find((img) => img.id === 'zip-sweatshirt'),
-  },
-};
-
-const serviceOptions = {
-  basic: {
-    type: 'basic' as ServiceType,
-    name: 'Servizio Base',
-    price: 0,
-    description: 'Servizio di base incluso nel prezzo.',
-  },
-  premium: {
-    type: 'premium' as ServiceType,
-    name: 'Servizio Premium',
-    price: 5,
-    description: 'Include trattamento speciale e consegna prioritaria.',
   },
 };
 
@@ -69,18 +54,14 @@ export function OrderForm() {
   const { toast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
   
-  const [addZip, setAddZip] = useState(false);
-  const [selectedService, setSelectedService] = useState<ServiceType>('basic');
-  const [total, setTotal] = useState(sweatshirtOptions.default.price + serviceOptions.basic.price);
+  const [sweatshirtType, setSweatshirtType] = useState<SweatshirtType>('default');
+  const [total, setTotal] = useState(sweatshirtOptions.default.price);
 
-  const sweatshirtType = addZip ? 'zip' : 'default';
-  const currentSweatshirt = addZip ? sweatshirtOptions.zip : sweatshirtOptions.default;
+  const currentSweatshirt = sweatshirtOptions[sweatshirtType];
 
   useEffect(() => {
-    const sweatshirtPrice = addZip ? sweatshirtOptions.zip.price : sweatshirtOptions.default.price;
-    const servicePrice = serviceOptions[selectedService].price;
-    setTotal(sweatshirtPrice + servicePrice);
-  }, [addZip, selectedService]);
+    setTotal(currentSweatshirt.price);
+  }, [currentSweatshirt]);
 
   useEffect(() => {
     if (state.message) {
@@ -90,8 +71,7 @@ export function OrderForm() {
           description: state.message,
         });
         formRef.current?.reset();
-        setAddZip(false);
-        setSelectedService('basic');
+        setSweatshirtType('default');
       } else {
         toast({
           title: 'Errore',
@@ -118,65 +98,48 @@ export function OrderForm() {
         {state.errors?.phone && <p className="text-sm font-medium text-destructive">{state.errors.phone}</p>}
       </div>
       
-      <input type="hidden" name="sweatshirtType" value={sweatshirtType} />
-      
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex items-center gap-4">
-            {currentSweatshirt.image && (
-              <Image
-                src={currentSweatshirt.image.imageUrl}
-                alt={currentSweatshirt.image.description}
-                data-ai-hint={currentSweatshirt.image.imageHint}
-                width={80}
-                height={80}
-                className="rounded-md aspect-square object-cover"
-              />
-            )}
-            <div className="flex-grow">
-              <p className="font-semibold text-lg">{sweatshirtOptions.default.name}</p>
-              <p className="text-xl font-bold text-primary">€{sweatshirtOptions.default.price.toFixed(2)}</p>
-            </div>
-          </div>
-          <Separator className="my-4" />
-          <div className="flex items-center justify-between">
-            <Label htmlFor="add-zip" className="flex flex-col gap-1">
-              <span className="font-semibold">Aggiungi Zip (+€{(sweatshirtOptions.zip.price - sweatshirtOptions.default.price).toFixed(2)})</span>
-              <span className="text-sm text-muted-foreground">Trasforma in felpa con cerniera.</span>
-            </Label>
-            <Switch id="add-zip" checked={addZip} onCheckedChange={setAddZip} />
-          </div>
-        </CardContent>
-      </Card>
-      {state.errors?.sweatshirtType && <p className="text-sm font-medium text-destructive">{state.errors.sweatshirtType}</p>}
-
       <div>
-        <Label className="text-lg font-semibold mb-2 block">Scegli il servizio</Label>
-        <RadioGroup name="serviceType" value={selectedService} onValueChange={(value) => setSelectedService(value as ServiceType)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Object.values(serviceOptions).map((option) => (
+        <Label className="text-lg font-semibold mb-2 block">Scegli la felpa</Label>
+        <RadioGroup name="sweatshirtType" value={sweatshirtType} onValueChange={(value) => setSweatshirtType(value as SweatshirtType)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {Object.values(sweatshirtOptions).map((option) => (
             <div key={option.type}>
-              <RadioGroupItem value={option.type} id={option.type} className="sr-only" />
-              <Label htmlFor={option.type}>
-                <Card className={cn("cursor-pointer hover:border-primary transition-colors h-full", selectedService === option.type && "border-primary ring-2 ring-primary")}>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-xl">
-                      <Briefcase className="w-5 h-5" />
-                      {option.name}
-                    </CardTitle>
-                  </CardHeader>
-                   <CardContent className="space-y-2">
-                      <p className="text-2xl font-bold text-primary">+€{option.price.toFixed(2)}</p>
-                      <p className="text-sm text-muted-foreground flex items-start gap-2">
-                        <Info className="w-4 h-4 mt-0.5 shrink-0" />
-                        <span>{option.description}</span>
-                      </p>
+              <RadioGroupItem value={option.type} id={`sweatshirt-${option.type}`} className="sr-only" />
+              <Label htmlFor={`sweatshirt-${option.type}`}>
+                <Card className={cn("cursor-pointer hover:border-primary transition-colors h-full", sweatshirtType === option.type && "border-primary ring-2 ring-primary")}>
+                    {option.image && (
+                        <CardHeader className="p-0">
+                            <Image
+                                src={option.image.imageUrl}
+                                alt={option.image.description}
+                                data-ai-hint={option.image.imageHint}
+                                width={400}
+                                height={300}
+                                className="rounded-t-lg w-full aspect-[4/3] object-cover"
+                            />
+                        </CardHeader>
+                    )}
+                   <CardContent className="p-4 space-y-1">
+                      <CardTitle className="flex items-center gap-2 text-xl">
+                        <Shirt className="w-5 h-5" />
+                        {option.name}
+                      </CardTitle>
+                      <p className="text-2xl font-bold text-primary">€{option.price.toFixed(2)}</p>
                    </CardContent>
                 </Card>
               </Label>
             </div>
           ))}
         </RadioGroup>
-        {state.errors?.serviceType && <p className="text-sm font-medium text-destructive">{state.errors.serviceType}</p>}
+        {state.errors?.sweatshirtType && <p className="text-sm font-medium text-destructive">{state.errors.sweatshirtType}</p>}
+      </div>
+
+      <div>
+        <Label htmlFor="service" className="text-lg font-semibold mb-2 block">Servizio</Label>
+        <div className="relative">
+          <Briefcase className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground" />
+          <Textarea id="service" name="service" placeholder="Descrivi il servizio richiesto (es. ricamo personalizzato, patch, etc.)" className="pl-10" />
+        </div>
+        {state.errors?.service && <p className="text-sm font-medium text-destructive">{state.errors.service}</p>}
       </div>
       
       <div className="space-y-4 rounded-lg bg-muted/50 p-4">

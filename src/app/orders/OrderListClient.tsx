@@ -51,7 +51,7 @@ export default function OrderListClient({ orders }: { orders: Order[] }) {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Cerca per nome o telefono..."
+            placeholder="Cerca per nome, telefono o servizio..."
             className="pl-10 h-12 w-full"
             onChange={(e) => handleSearch(e.target.value)}
             defaultValue={searchParams.get('search')?.toString()}
@@ -63,7 +63,7 @@ export default function OrderListClient({ orders }: { orders: Order[] }) {
              <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="w-full md:w-auto justify-between h-12">
-                  <span>{currentType ? `Felpa ${currentType}` : 'Tutti i tipi'}</span>
+                  <span>{currentType === 'default' ? 'Felpa Ufficiale' : currentType === 'zip' ? 'Felpa + Giacca' : 'Tutti i tipi'}</span>
                   <ListFilter className="ml-2 h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -72,8 +72,8 @@ export default function OrderListClient({ orders }: { orders: Order[] }) {
                 <DropdownMenuSeparator />
                 <DropdownMenuRadioGroup value={currentType || 'all'} onValueChange={(value) => handleFilterChange(value as SweatshirtType | 'all')}>
                   <DropdownMenuRadioItem value="all">Tutti</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="default">Default</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="zip">Con Zip</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="default">Felpa Ufficiale</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="zip">Felpa + Giacca</DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
               </DropdownMenuContent>
             </DropdownMenu>

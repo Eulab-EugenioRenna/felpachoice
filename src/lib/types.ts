@@ -12,7 +12,7 @@ export interface Order {
     name: string;
     phone: string;
     sweatshirtType: SweatshirtType;
-    serviceType: ServiceType;
+    service: string;
     price: number;
   };
 }
