@@ -12,7 +12,7 @@ const orderSchema = z.object({
   sweatshirtType: z.enum(['default', 'zip'], {
     required_error: 'Devi selezionare un tipo di felpa.',
   }),
-  service: z.string().optional(),
+  service: z.enum(['media', 'welcome', 'security']).optional(),
 });
 
 export type State = {

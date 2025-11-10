@@ -14,8 +14,13 @@ import { useToast } from '@/hooks/use-toast';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
 import type { SweatshirtType } from '@/lib/types';
-import { Separator } from '@/components/ui/separator';
-import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 
 const sweatshirtOptions = {
@@ -134,10 +139,19 @@ export function OrderForm() {
       </div>
 
       <div>
-        <Label htmlFor="service" className="text-lg font-semibold mb-2 block">Servizio</Label>
+        <Label htmlFor="service" className="text-lg font-semibold mb-2 block">Servizio Svolto</Label>
         <div className="relative">
-          <Briefcase className="absolute left-3 top-3.5 h-5 w-5 text-muted-foreground" />
-          <Textarea id="service" name="service" placeholder="Descrivi il servizio svolto (es. ricamo personalizzato, patch, etc.)" className="pl-10" />
+          <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
+            <Select name="service">
+              <SelectTrigger className="pl-10 h-12">
+                <SelectValue placeholder="Seleziona un servizio" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="media">media</SelectItem>
+                <SelectItem value="welcome">welcome</SelectItem>
+                <SelectItem value="security">security</SelectItem>
+              </SelectContent>
+            </Select>
         </div>
         {state.errors?.service && <p className="text-sm font-medium text-destructive">{state.errors.service}</p>}
       </div>
