@@ -17,6 +17,7 @@ export interface OrderItem {
   price: number;
   size: string;
   service: string;
+  category: 'sweatshirt' | 'jacket';
 }
 
 export interface Order {

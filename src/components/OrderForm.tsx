@@ -103,6 +103,14 @@ export function OrderForm() {
       }
     }
     
+    // Fallback for when service is not selected or image not found
+    const defaultImageKey = selectedProduct.category === 'jacket' ? 'zip-none' : 'default-none';
+    const defaultImage = PlaceHolderImages.find(img => img.id === defaultImageKey);
+    
+    if (defaultImage) {
+        return defaultImage;
+    }
+
     return {
         imageUrl: selectedProduct.imageUrl,
         imageHint: selectedProduct.imageHint,
@@ -128,6 +136,7 @@ export function OrderForm() {
       quantity: currentItem.quantity,
       size: currentItem.size,
       service: currentItem.service,
+      category: product.category,
     };
     
     setOrderItems([...orderItems, newItem]);

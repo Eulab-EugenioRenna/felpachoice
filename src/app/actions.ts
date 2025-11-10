@@ -14,6 +14,7 @@ const orderItemSchema = z.object({
   price: z.number(),
   size: z.string(),
   service: z.string(),
+  category: z.string(),
 });
 
 const orderSchema = z.object({

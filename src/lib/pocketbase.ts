@@ -11,14 +11,14 @@ export async function getOrders(
 
   if (search) {
     // PocketBase uses `~` for LIKE operator
-    // Search in name, phone, and within the items for product name or service
+    // Search in name, phone, and within the items for product name or service for both legacy and new formats.
     const searchFilter = `(request.name ~ "${search}" || request.phone ~ "${search}" || request.items.productName ~ "${search}" || request.items.service ~ "${search}" || request.service ~ "${search}")`
     filterParts.push(searchFilter);
   }
 
   if (category) {
-    // Filter by item category for new orders
-    const categoryFilter = `(request.items.category ~ "${category}")`;
+    // Filter by item category. This works for the new format where items is an array of objects.
+    const categoryFilter = `request.items.category = "${category}"`;
     filterParts.push(categoryFilter);
   }
 
@@ -31,8 +31,6 @@ export async function getOrders(
     url.searchParams.set('filter', filter);
   }
   url.searchParams.set('sort', '-created');
-  // Expand items to allow filtering by category
-  url.searchParams.set('expand', 'request.items'); 
 
 
   try {
