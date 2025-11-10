@@ -119,7 +119,7 @@ export function OrderForm() {
                                 data-ai-hint={option.image.imageHint}
                                 width={400}
                                 height={300}
-                                className="rounded-t-lg w-full aspect-[4/3] object-cover"
+                                className="rounded-t-lg w-full aspect-[4/3] object-contain"
                             />
                         </CardHeader>
                     )}
