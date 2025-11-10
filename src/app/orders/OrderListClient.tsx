@@ -48,7 +48,9 @@ export default function OrderListClient({ orders: initialOrders }: { orders: Ord
         order.request.items.forEach(item => {
           const brand = item.productId.includes('payper') ? 'PAYPER' : 'JHK';
           brandSet.add(brand);
-          typeSet.add(item.category);
+          if (item.category) {
+            typeSet.add(item.category);
+          }
           sizeSet.add(item.size);
           serviceSet.add(item.service);
           
@@ -62,8 +64,11 @@ export default function OrderListClient({ orders: initialOrders }: { orders: Ord
         if (order.request.service) serviceSummary[order.request.service] = (serviceSummary[order.request.service] || 0) + 1;
         if (order.request.size) sizeSummary[order.request.size] = (sizeSummary[order.request.size] || 0) + 1;
         
-        if(order.request.sweatshirtType === 'default') typeSet.add('sweatshirt');
-        else if(order.request.sweatshirtType === 'zip') typeSet.add('jacket');
+        if (order.request.sweatshirtType === 'default') {
+          typeSet.add('sweatshirt');
+        } else if (order.request.sweatshirtType === 'zip') {
+          typeSet.add('jacket');
+        }
 
       }
     });
