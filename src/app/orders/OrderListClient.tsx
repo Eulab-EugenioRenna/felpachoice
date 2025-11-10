@@ -1,82 +1,169 @@
 'use client';
 
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { useState, useMemo } from 'react';
 import { useDebouncedCallback } from 'use-debounce';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { OrderCard } from './OrderCard';
 import type { Order } from '@/lib/types';
-import { Search, ListFilter, Briefcase, Ruler } from 'lucide-react';
+import { Search, ListFilter, Briefcase, Ruler, X, Tag } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
+  DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 
+type FilterCategory = 'brand' | 'type' | 'size' | 'service';
 
-export default function OrderListClient({ orders }: { orders: Order[] }) {
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const currentCategory = searchParams.get('category');
+export default function OrderListClient({ orders: initialOrders }: { orders: Order[] }) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState<Record<FilterCategory, string[]>>({
+    brand: [],
+    type: [],
+    size: [],
+    service: [],
+  });
 
   const handleSearch = useDebouncedCallback((term: string) => {
-    const params = new URLSearchParams(searchParams);
-    if (term) {
-      params.set('search', term);
-    } else {
-      params.delete('search');
-    }
-    router.replace(`${pathname}?${params.toString()}`);
+    setSearchTerm(term.toLowerCase());
   }, 300);
 
-  const handleFilterChange = (category: 'sweatshirt' | 'jacket' | 'all') => {
-    const params = new URLSearchParams(searchParams);
-    if (category === 'all') {
-      params.delete('category');
-    } else {
-      params.set('category', category);
-    }
-    router.replace(`${pathname}?${params.toString()}`);
+  const { availableFilters, serviceSummary, sizeSummary } = useMemo(() => {
+    const brandSet = new Set<string>();
+    const typeSet = new Set<string>();
+    const sizeSet = new Set<string>();
+    const serviceSet = new Set<string>();
+    
+    const serviceSummary: Record<string, number> = {};
+    const sizeSummary: Record<string, number> = {};
+
+    initialOrders.forEach(order => {
+      if (order.request.items && Array.isArray(order.request.items)) {
+        order.request.items.forEach(item => {
+          const brand = item.productId.includes('payper') ? 'PAYPER' : 'JHK';
+          brandSet.add(brand);
+          typeSet.add(item.category);
+          sizeSet.add(item.size);
+          serviceSet.add(item.service);
+          
+          serviceSummary[item.service] = (serviceSummary[item.service] || 0) + item.quantity;
+          sizeSummary[item.size] = (sizeSummary[item.size] || 0) + item.quantity;
+        });
+      } else { // Legacy
+        if(order.request.service) serviceSet.add(order.request.service);
+        if(order.request.size) sizeSet.add(order.request.size);
+        
+        if (order.request.service) serviceSummary[order.request.service] = (serviceSummary[order.request.service] || 0) + 1;
+        if (order.request.size) sizeSummary[order.request.size] = (sizeSummary[order.request.size] || 0) + 1;
+
+      }
+    });
+    
+    return {
+      availableFilters: {
+        brand: Array.from(brandSet).sort(),
+        type: Array.from(typeSet).sort(),
+        size: Array.from(sizeSet).sort((a,b) => a.localeCompare(b)),
+        service: Array.from(serviceSet).sort(),
+      },
+      serviceSummary,
+      sizeSummary,
+    };
+  }, [initialOrders]);
+  
+  const handleFilterChange = (category: FilterCategory, value: string) => {
+    setFilters(prev => {
+      const newValues = prev[category].includes(value)
+        ? prev[category].filter(v => v !== value)
+        : [...prev[category], value];
+      return { ...prev, [category]: newValues };
+    });
   };
 
-  const serviceSummary = orders.reduce((acc, order) => {
-    if (order.request.items && Array.isArray(order.request.items)) {
-      order.request.items.forEach(item => {
-        const service = item.service || 'Nessuno';
-        acc[service] = (acc[service] || 0) + item.quantity;
-      });
-    } else if (order.request.service) { // Legacy format
-      const service = order.request.service || 'Nessuno';
-      acc[service] = (acc[service] || 0) + 1;
-    }
-    return acc;
-  }, {} as Record<string, number>);
+  const filteredOrders = useMemo(() => {
+    return initialOrders.filter(order => {
+      const searchMatch = !searchTerm ||
+        order.request.name.toLowerCase().includes(searchTerm) ||
+        order.request.phone.toLowerCase().includes(searchTerm) ||
+        (order.request.items && order.request.items.some(item => 
+          item.productName.toLowerCase().includes(searchTerm) ||
+          item.service.toLowerCase().includes(searchTerm)
+        )) ||
+        (order.request.service && order.request.service.toLowerCase().includes(searchTerm));
 
-  const sizeSummary = orders.reduce((acc, order) => {
-    if (order.request.items && Array.isArray(order.request.items)) {
-      order.request.items.forEach(item => {
-        const size = item.size || 'N/A';
-        acc[size] = (acc[size] || 0) + item.quantity;
-      });
-    } else if (order.request.size) { // Legacy format
-      const size = order.request.size || 'N/A';
-      acc[size] = (acc[size] || 0) + 1;
-    }
-    return acc;
-  }, {} as Record<string, number>);
+      if (!searchMatch) return false;
 
-  const getFilterLabel = () => {
-    if (currentCategory === 'sweatshirt') return 'Felpa';
-    if (currentCategory === 'jacket') return 'Giacca';
-    return 'Tutti i tipi';
-  }
+      // Check if order has any item matching all active filters
+      const filterMatch = Object.entries(filters).every(([category, values]) => {
+        if (values.length === 0) return true;
+        
+        if (order.request.items && order.request.items.length > 0) {
+            return order.request.items.some(item => {
+                if (category === 'brand') return values.includes(item.productId.includes('payper') ? 'PAYPER' : 'JHK');
+                if (category === 'type') return values.includes(item.category);
+                if (category === 'size') return values.includes(item.size);
+                if (category === 'service') return values.includes(item.service);
+                return true;
+            });
+        }
+        
+        // Legacy order format check
+        if (category === 'size') return values.includes(order.request.size!);
+        if (category === 'service') return values.includes(order.request.service!);
+        // Legacy orders don't have brand or explicit type in the same way.
+        if (category === 'type') {
+            if (order.request.sweatshirtType === 'default' && values.includes('sweatshirt')) return true;
+            if (order.request.sweatshirtType === 'zip' && values.includes('jacket')) return true;
+        }
+
+        return false;
+      });
+
+      return filterMatch;
+    });
+  }, [initialOrders, searchTerm, filters]);
+
+  const activeFilterCount = Object.values(filters).reduce((acc, v) => acc + v.length, 0);
+
+  const clearFilters = () => {
+    setFilters({ brand: [], type: [], size: [], service: [] });
+  };
+
+  const FilterDropdown = ({ category, title, options }: { category: FilterCategory, title: string, options: string[] }) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" className="w-full md:w-auto justify-between h-12">
+          <div className="flex items-center">
+            {title}
+            {filters[category].length > 0 && (
+              <Badge variant="secondary" className="ml-2">{filters[category].length}</Badge>
+            )}
+          </div>
+          <ListFilter className="ml-2 h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuLabel>{title}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {options.map(option => (
+          <DropdownMenuCheckboxItem
+            key={option}
+            checked={filters[category].includes(option)}
+            onSelect={(e) => e.preventDefault()}
+            onCheckedChange={() => handleFilterChange(category, option)}
+          >
+            {option}
+          </DropdownMenuCheckboxItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 
   return (
     <div>
@@ -89,7 +176,7 @@ export default function OrderListClient({ orders }: { orders: Order[] }) {
                   </CardTitle>
               </CardHeader>
               <CardContent className="flex flex-wrap gap-2">
-                  {Object.entries(serviceSummary).map(([service, count]) => (
+                  {Object.entries(serviceSummary).sort(([a], [b]) => a.localeCompare(b)).map(([service, count]) => (
                       <Badge key={service} variant="secondary" className="text-base">
                           {service}: {count}
                       </Badge>
@@ -113,45 +200,45 @@ export default function OrderListClient({ orders }: { orders: Order[] }) {
           </Card>
       </div>
 
+      <Card className="mb-8">
+        <CardHeader>
+            <CardTitle>Filtri e Ricerca</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <Input
+                type="search"
+                placeholder="Cerca per nome, telefono, articolo..."
+                className="pl-10 h-12 w-full"
+                onChange={(e) => handleSearch(e.target.value)}
+              />
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <FilterDropdown category="brand" title="Marca" options={availableFilters.brand} />
+              <FilterDropdown category="type" title="Tipo" options={availableFilters.type} />
+              <FilterDropdown category="size" title="Taglia" options={availableFilters.size} />
+              <FilterDropdown category="service" title="Servizio" options={availableFilters.service} />
+            </div>
+            {activeFilterCount > 0 && (
+              <>
+                <Separator />
+                <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">{activeFilterCount} filtri attivi</p>
+                    <Button variant="ghost" onClick={clearFilters}>
+                        <X className="mr-2 h-4 w-4" />
+                        Pulisci filtri
+                    </Button>
+                </div>
+              </>
+            )}
+        </CardContent>
+      </Card>
 
-      <div className="flex flex-col md:flex-row items-center gap-4 mb-8">
-        <div className="relative w-full md:flex-grow">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Cerca per nome, telefono, articolo o servizio..."
-            className="pl-10 h-12 w-full"
-            onChange={(e) => handleSearch(e.target.value)}
-            defaultValue={searchParams.get('search')?.toString()}
-          />
-        </div>
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <span className="hidden md:block text-sm font-medium text-muted-foreground">Filtra per:</span>
-          <div className="flex-grow md:flex-grow-0">
-             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="w-full md:w-auto justify-between h-12">
-                  <span>{getFilterLabel()}</span>
-                  <ListFilter className="ml-2 h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuLabel>Tipo di Prodotto</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuRadioGroup value={currentCategory || 'all'} onValueChange={(value) => handleFilterChange(value as 'sweatshirt' | 'jacket' | 'all')}>
-                  <DropdownMenuRadioItem value="all">Tutti</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="sweatshirt">Felpa</DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="jacket">Giacca</DropdownMenuRadioItem>
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </div>
 
-      {orders.length > 0 ? (
+      {filteredOrders.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {orders.map((order) => (
+          {filteredOrders.map((order) => (
             <OrderCard key={order.id} order={order} />
           ))}
         </div>

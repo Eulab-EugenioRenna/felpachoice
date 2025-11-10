@@ -5,18 +5,8 @@ import type { Product } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
-export default async function OrdersPage({
-  searchParams,
-}: {
-  searchParams?: {
-    search?: string;
-    category?: Product['category'] | 'all';
-  };
-}) {
-  const search = searchParams?.search || '';
-  const category = searchParams?.category === 'all' ? '' : searchParams?.category || '';
-
-  const orders: Order[] = await getOrders(search, category);
+export default async function OrdersPage() {
+  const orders: Order[] = await getOrders();
 
   return (
     <div className="container mx-auto py-8 md:py-12 px-4">
