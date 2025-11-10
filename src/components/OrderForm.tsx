@@ -1,17 +1,15 @@
 'use client';
 
-import { useEffect, useRef, useActionState } from 'react';
+import { useEffect, useRef, useActionState, useState, useMemo } from 'react';
 import { useFormStatus } from 'react-dom';
 import Image from 'next/image';
-import { Loader2, User, Phone, Briefcase, Ruler, PlusCircle, XCircle, Trash2, ShoppingCart } from 'lucide-react';
+import { Loader2, User, Phone, ShoppingCart, XCircle, PlusCircle, Trash2 } from 'lucide-react';
 import { submitOrder, type State } from '@/app/actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { cn } from '@/lib/utils';
 import {
   Select,
   SelectContent,
@@ -19,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useState } from 'react';
 import type { OrderItem, Product } from '@/lib/types';
 
 const products: Product[] = [
@@ -81,6 +78,10 @@ export function OrderForm() {
     size: 'M',
     service: 'none',
   });
+
+  const selectedProduct = useMemo(() => {
+    return products.find(p => p.id === currentItem.productId);
+  }, [currentItem.productId]);
 
   const total = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   
@@ -164,6 +165,18 @@ export function OrderForm() {
           <CardContent className="space-y-4">
             {showItemForm && (
                 <div className="p-4 border rounded-lg space-y-4 bg-muted/50">
+                    {selectedProduct && (
+                        <div className="flex justify-center my-4">
+                            <Image
+                                src={selectedProduct.imageUrl}
+                                alt={selectedProduct.name}
+                                width={200}
+                                height={200}
+                                className="h-48 w-auto object-contain transition-all duration-300"
+                                data-ai-hint={selectedProduct.imageHint}
+                            />
+                        </div>
+                    )}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                           <Label htmlFor="product" className="font-semibold mb-2 block">Prodotto</Label>
