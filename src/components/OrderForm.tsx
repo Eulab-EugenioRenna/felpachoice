@@ -28,7 +28,7 @@ const sweatshirtOptions = {
   zip: {
     type: 'zip' as SweatshirtType,
     name: 'Felpa Ufficiale + Giacca',
-    price: 28,
+    price: 43,
     image: PlaceHolderImages.find((img) => img.id === 'zip-sweatshirt'),
   },
 };

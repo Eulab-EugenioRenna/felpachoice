@@ -48,7 +48,7 @@ export async function submitOrder(prevState: State, formData: FormData): Promise
   if (sweatshirtType === 'default') {
     price = 15;
   } else {
-    price = 28;
+    price = 43;
   }
 
   const requestPayload = {
