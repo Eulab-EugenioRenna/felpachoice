@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { OrderCard } from './OrderCard';
 import type { Order, SweatshirtType } from '@/lib/types';
-import { Search, ListFilter } from 'lucide-react';
+import { Search, ListFilter, Briefcase, Ruler } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +16,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 
 export default function OrderListClient({ orders }: { orders: Order[] }) {
@@ -44,8 +46,54 @@ export default function OrderListClient({ orders }: { orders: Order[] }) {
     router.replace(`${pathname}?${params.toString()}`);
   };
 
+  const serviceSummary = orders.reduce((acc, order) => {
+    const service = order.request.service || 'Nessuno';
+    acc[service] = (acc[service] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const sizeSummary = orders.reduce((acc, order) => {
+    const size = order.request.size;
+    acc[size] = (acc[size] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
   return (
     <div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <Card>
+              <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                      <Briefcase className="w-5 h-5" />
+                      Riepilogo Servizi
+                  </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-2">
+                  {Object.entries(serviceSummary).map(([service, count]) => (
+                      <Badge key={service} variant="secondary" className="text-base">
+                          {service}: {count}
+                      </Badge>
+                  ))}
+              </CardContent>
+          </Card>
+           <Card>
+              <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-xl">
+                      <Ruler className="w-5 h-5" />
+                      Riepilogo Taglie
+                  </CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-2">
+                   {Object.entries(sizeSummary).map(([size, count]) => (
+                      <Badge key={size} variant="secondary" className="text-base">
+                          {size}: {count}
+                      </Badge>
+                  ))}
+              </CardContent>
+          </Card>
+      </div>
+
+
       <div className="flex flex-col md:flex-row items-center gap-4 mb-8">
         <div className="relative w-full md:flex-grow">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
