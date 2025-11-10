@@ -8,12 +8,12 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { Order } from '@/lib/types';
-import { Shirt, User, Phone, Calendar, Tag } from 'lucide-react';
+import { Shirt, User, Phone, Calendar, Tag, Briefcase } from 'lucide-react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 
 export function OrderCard({ order }: { order: Order }) {
-  const { name, phone, sweatshirtType, price } = order.request;
+  const { name, phone, sweatshirtType, serviceType, price } = order.request;
   const orderDate = new Date(order.created);
 
   return (
@@ -41,8 +41,12 @@ export function OrderCard({ order }: { order: Order }) {
             <span>Tipo Felpa: <span className="font-semibold text-foreground">{sweatshirtType === 'default' ? 'Standard' : 'Con Cerniera'}</span></span>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Briefcase className="w-4 h-4" />
+            <span>Servizio: <span className="font-semibold text-foreground">{serviceType === 'basic' ? 'Base' : 'Premium'}</span></span>
+        </div>
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Tag className="w-4 h-4" />
-            <span>Prezzo: <span className="font-semibold text-foreground">€{price.toFixed(2)}</span></span>
+            <span>Prezzo Totale: <span className="font-semibold text-foreground">€{price.toFixed(2)}</span></span>
         </div>
       </CardContent>
       <CardFooter>

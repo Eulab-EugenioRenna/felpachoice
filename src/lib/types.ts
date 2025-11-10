@@ -1,5 +1,7 @@
 export type SweatshirtType = 'default' | 'zip';
 
+export type ServiceType = 'basic' | 'premium';
+
 export interface Order {
   id: string;
   collectionId: string;
@@ -10,6 +12,7 @@ export interface Order {
     name: string;
     phone: string;
     sweatshirtType: SweatshirtType;
+    serviceType: ServiceType;
     price: number;
   };
 }

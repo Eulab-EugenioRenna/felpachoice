@@ -12,6 +12,9 @@ const orderSchema = z.object({
   sweatshirtType: z.enum(['default', 'zip'], {
     required_error: 'Devi selezionare un tipo di felpa.',
   }),
+  serviceType: z.enum(['basic', 'premium'], {
+    required_error: 'Devi selezionare un tipo di servizio.',
+  }),
 });
 
 export type State = {
@@ -19,6 +22,7 @@ export type State = {
     name?: string[];
     phone?: string[];
     sweatshirtType?: string[];
+    serviceType?: string[];
   };
   message?: string | null;
   success?: boolean;
@@ -29,6 +33,7 @@ export async function submitOrder(prevState: State, formData: FormData): Promise
     name: formData.get('name'),
     phone: formData.get('phone'),
     sweatshirtType: formData.get('sweatshirtType'),
+    serviceType: formData.get('serviceType')
   });
 
   if (!validatedFields.success) {
@@ -39,14 +44,25 @@ export async function submitOrder(prevState: State, formData: FormData): Promise
     };
   }
   
-  const { name, phone, sweatshirtType } = validatedFields.data;
-  const price = sweatshirtType === 'default' ? 15 : 28;
+  const { name, phone, sweatshirtType, serviceType } = validatedFields.data;
+  
+  let price = 0;
+  if (sweatshirtType === 'default') {
+    price += 15;
+  } else {
+    price += 28;
+  }
+
+  if (serviceType === 'premium') {
+    price += 5;
+  }
 
   const requestPayload = {
     request: {
       name,
       phone,
       sweatshirtType,
+      serviceType,
       price,
     },
   };
