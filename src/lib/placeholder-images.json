@@ -1,16 +1,64 @@
 {
   "placeholderImages": [
     {
-      "id": "default-sweatshirt",
+      "id": "default",
       "description": "Una felpa standard di colore verde.",
       "imageUrl": "/images/default-sweatshirt.png",
       "imageHint": "green sweatshirt"
     },
     {
-      "id": "zip-sweatshirt",
+      "id": "zip",
       "description": "Una felpa di colore blu scuro con cerniera.",
       "imageUrl": "/images/zip-sweatshirt.png",
       "imageHint": "zip sweatshirt"
+    },
+    {
+      "id": "default-media",
+      "description": "Una felpa standard di colore verde per il servizio media.",
+      "imageUrl": "/images/default-media-sweatshirt.png",
+      "imageHint": "green sweatshirt camera"
+    },
+    {
+      "id": "zip-media",
+      "description": "Una felpa con cerniera di colore blu scuro per il servizio media.",
+      "imageUrl": "/images/zip-media-sweatshirt.png",
+      "imageHint": "zip sweatshirt camera"
+    },
+    {
+      "id": "default-welcome",
+      "description": "Una felpa standard di colore verde per il servizio welcome.",
+      "imageUrl": "/images/default-welcome-sweatshirt.png",
+      "imageHint": "green sweatshirt handshake"
+    },
+    {
+      "id": "zip-welcome",
+      "description": "Una felpa con cerniera di colore blu scuro per il servizio welcome.",
+      "imageUrl": "/images/zip-welcome-sweatshirt.png",
+      "imageHint": "zip sweatshirt handshake"
+    },
+    {
+      "id": "default-security",
+      "description": "Una felpa standard di colore verde per il servizio security.",
+      "imageUrl": "/images/default-security-sweatshirt.png",
+      "imageHint": "green sweatshirt shield"
+    },
+    {
+      "id": "zip-security",
+      "description": "Una felpa con cerniera di colore blu scuro per il servizio security.",
+      "imageUrl": "/images/zip-security-sweatshirt.png",
+      "imageHint": "zip sweatshirt shield"
+    },
+    {
+      "id": "default-kids",
+      "description": "Una felpa standard di colore verde per il servizio kids.",
+      "imageUrl": "/images/default-kids-sweatshirt.png",
+      "imageHint": "green sweatshirt balloon"
+    },
+    {
+      "id": "zip-kids",
+      "description": "Una felpa con cerniera di colore blu scuro per il servizio kids.",
+      "imageUrl": "/images/zip-kids-sweatshirt.png",
+      "imageHint": "zip sweatshirt balloon"
     }
   ]
 }

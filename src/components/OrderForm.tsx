@@ -28,15 +28,15 @@ const sweatshirtOptions = {
     type: 'default' as SweatshirtType,
     name: 'Felpa Ufficiale',
     price: 15,
-    image: PlaceHolderImages.find((img) => img.id === 'default-sweatshirt'),
   },
   zip: {
     type: 'zip' as SweatshirtType,
     name: 'Felpa Ufficiale + Giacca',
     price: 43,
-    image: PlaceHolderImages.find((img) => img.id === 'zip-sweatshirt'),
   },
 };
+
+const services = ['media', 'welcome', 'security', 'kids'];
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -60,10 +60,18 @@ export function OrderForm() {
   const formRef = useRef<HTMLFormElement>(null);
   
   const [sweatshirtType, setSweatshirtType] = useState<SweatshirtType>('default');
+  const [service, setService] = useState<string | undefined>(undefined);
   const [total, setTotal] = useState(sweatshirtOptions.default.price);
 
   const currentSweatshirt = sweatshirtOptions[sweatshirtType];
 
+  const getCurrentImage = (type: SweatshirtType, currentService?: string) => {
+    const serviceSuffix = currentService ? `-${currentService}` : '';
+    const imageId = `${type}${serviceSuffix}`;
+    const fallbackImageId = `${type}`;
+    return PlaceHolderImages.find((img) => img.id === imageId) || PlaceHolderImages.find((img) => img.id === fallbackImageId);
+  };
+  
   useEffect(() => {
     setTotal(currentSweatshirt.price);
   }, [currentSweatshirt]);
@@ -77,6 +85,7 @@ export function OrderForm() {
         });
         formRef.current?.reset();
         setSweatshirtType('default');
+        setService(undefined);
       } else {
         toast({
           title: 'Errore',
@@ -106,34 +115,37 @@ export function OrderForm() {
       <div>
         <Label className="text-lg font-semibold mb-2 block">Scegli la felpa</Label>
         <RadioGroup name="sweatshirtType" value={sweatshirtType} onValueChange={(value) => setSweatshirtType(value as SweatshirtType)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Object.values(sweatshirtOptions).map((option) => (
-            <div key={option.type}>
-              <RadioGroupItem value={option.type} id={`sweatshirt-${option.type}`} className="sr-only" />
-              <Label htmlFor={`sweatshirt-${option.type}`}>
-                <Card className={cn("cursor-pointer hover:border-primary transition-colors h-full", sweatshirtType === option.type && "border-primary ring-2 ring-primary")}>
-                    {option.image && (
-                        <CardHeader className="p-0">
-                            <Image
-                                src={option.image.imageUrl}
-                                alt={option.image.description}
-                                data-ai-hint={option.image.imageHint}
-                                width={400}
-                                height={300}
-                                className="rounded-t-lg w-full aspect-[4/3] object-contain"
-                            />
-                        </CardHeader>
-                    )}
-                   <CardContent className="p-4 space-y-1">
-                      <CardTitle className="flex items-center gap-2 text-xl">
-                        <Shirt className="w-5 h-5" />
-                        {option.name}
-                      </CardTitle>
-                      <p className="text-2xl font-bold text-primary">€{option.price.toFixed(2)}</p>
-                   </CardContent>
-                </Card>
-              </Label>
-            </div>
-          ))}
+          {Object.values(sweatshirtOptions).map((option) => {
+            const image = getCurrentImage(option.type, service);
+            return (
+              <div key={option.type}>
+                <RadioGroupItem value={option.type} id={`sweatshirt-${option.type}`} className="sr-only" />
+                <Label htmlFor={`sweatshirt-${option.type}`}>
+                  <Card className={cn("cursor-pointer hover:border-primary transition-colors h-full", sweatshirtType === option.type && "border-primary ring-2 ring-primary")}>
+                      {image && (
+                          <CardHeader className="p-0">
+                              <Image
+                                  src={image.imageUrl}
+                                  alt={image.description}
+                                  data-ai-hint={image.imageHint}
+                                  width={400}
+                                  height={300}
+                                  className="rounded-t-lg w-full aspect-[4/3] object-contain"
+                              />
+                          </CardHeader>
+                      )}
+                     <CardContent className="p-4 space-y-1">
+                        <CardTitle className="flex items-center gap-2 text-xl">
+                          <Shirt className="w-5 h-5" />
+                          {option.name}
+                        </CardTitle>
+                        <p className="text-2xl font-bold text-primary">€{option.price.toFixed(2)}</p>
+                     </CardContent>
+                  </Card>
+                </Label>
+              </div>
+            )
+          })}
         </RadioGroup>
         {state.errors?.sweatshirtType && <p className="text-sm font-medium text-destructive">{state.errors.sweatshirtType}</p>}
       </div>
@@ -163,15 +175,12 @@ export function OrderForm() {
             <Label htmlFor="service" className="text-lg font-semibold mb-2 block">Servizio Svolto</Label>
             <div className="relative">
               <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground z-10" />
-                <Select name="service">
+                <Select name="service" onValueChange={setService}>
                   <SelectTrigger className="pl-10 h-12">
                     <SelectValue placeholder="Seleziona un servizio" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="media">media</SelectItem>
-                    <SelectItem value="welcome">welcome</SelectItem>
-                    <SelectItem value="security">security</SelectItem>
-                    <SelectItem value="kids">kids</SelectItem>
+                    {services.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                   </SelectContent>
                 </Select>
             </div>
