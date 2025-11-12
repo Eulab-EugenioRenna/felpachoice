@@ -10,13 +10,15 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { Order } from '@/lib/types';
-import { User, Phone, Calendar, ShoppingCart, CheckCircle2, Hourglass } from 'lucide-react';
+import { User, Phone, Calendar, ShoppingCart, CheckCircle2, Hourglass, FileText, Save } from 'lucide-react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
-import { markAsPaid } from '@/app/actions';
+import { markAsPaid, updateOrderNotes } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
 
 
 const renderOrderContent = (order: Order) => {
@@ -73,11 +75,13 @@ const renderOrderContent = (order: Order) => {
 };
 
 
-export function PaymentCard({ order, onPaymentUpdate }: { order: Order, onPaymentUpdate: () => void }) {
+export function PaymentCard({ order, onPaymentUpdate, onNoteUpdate }: { order: Order, onPaymentUpdate: (id: string) => void, onNoteUpdate: (id: string, notes: string) => void }) {
   const [createdDate, setCreatedDate] = useState('');
   const [paidDate, setPaidDate] = useState('');
+  const [notes, setNotes] = useState(order.request.notes ?? '');
   const { toast } = useToast();
-  const [isPending, setIsPending] = useState(false);
+  const [isPaying, setIsPaying] = useTransition();
+  const [isSavingNotes, setIsSavingNotes] = useTransition();
 
   useEffect(() => {
     try {
@@ -95,21 +99,58 @@ export function PaymentCard({ order, onPaymentUpdate }: { order: Order, onPaymen
     }
   }, [order.created, order.paid, order.paid_at]);
 
-  const handleMarkAsPaid = async () => {
-    setIsPending(true);
-    const result = await markAsPaid(order.id);
-    if (result.success) {
-      toast({ title: "Successo!", description: result.message });
-      onPaymentUpdate(); // This will trigger a re-render in parent to update state
-    } else {
-      toast({ title: "Errore", description: result.message, variant: "destructive" });
-    }
-    setIsPending(false);
+  useEffect(() => {
+    setNotes(order.request.notes ?? '');
+  }, [order.request.notes]);
+
+
+  const handleMarkAsPaid = () => {
+    setIsPaying(async () => {
+        const result = await markAsPaid(order.id);
+        if (result.success) {
+            toast({ title: "Successo!", description: result.message });
+            onPaymentUpdate(order.id);
+        } else {
+            toast({ title: "Errore", description: result.message, variant: "destructive" });
+        }
+    });
   };
+
+  const handleUpdateNotes = () => {
+    setIsSavingNotes(async () => {
+        const result = await updateOrderNotes(order.id, notes);
+        if (result.success) {
+            toast({ title: "Successo!", description: result.message });
+            onNoteUpdate(order.id, notes);
+        } else {
+            toast({ title: "Errore", description: result.message, variant: "destructive" });
+        }
+    });
+  };
+
 
   return (
     <Card className={`flex flex-col h-full shadow-md transition-all duration-300 ${order.paid ? 'bg-green-50 border-green-200' : 'bg-card'}`}>
       {renderOrderContent(order)}
+       <CardContent className="flex-grow">
+          <div className="space-y-2">
+            <label htmlFor={`notes-${order.id}`} className="flex items-center gap-2 font-semibold">
+                <FileText className="w-5 h-5" />
+                Note
+            </label>
+            <Textarea
+                id={`notes-${order.id}`}
+                placeholder="Aggiungi note sull'ordine..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                className="text-sm"
+            />
+            <Button onClick={handleUpdateNotes} disabled={isSavingNotes} size="sm" variant="outline" className="w-full">
+                {isSavingNotes ? 'Salvataggio...' : <> <Save className="mr-2 h-4 w-4" /> Aggiorna Nota </>}
+            </Button>
+          </div>
+       </CardContent>
+       <Separator className="my-4" />
       <CardFooter className="flex-col items-start gap-4">
         <div className="flex items-center justify-between w-full text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
@@ -135,8 +176,8 @@ export function PaymentCard({ order, onPaymentUpdate }: { order: Order, onPaymen
         )}
         
         {!order.paid && (
-            <Button onClick={handleMarkAsPaid} disabled={isPending} className="w-full">
-                {isPending ? 'Attendere...' : 'Segna come Pagato'}
+            <Button onClick={handleMarkAsPaid} disabled={isPaying} className="w-full">
+                {isPaying ? 'Attendere...' : 'Segna come Pagato'}
             </Button>
         )}
       </CardFooter>

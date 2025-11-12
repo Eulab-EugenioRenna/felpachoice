@@ -28,12 +28,6 @@ export default function PaymentListClient({ orders: initialOrders }: { orders: O
     paidStatus: [],
   });
 
-  const forceRerender = useCallback(() => {
-    // This is a bit of a hack to force re-evaluation of memos after an order is paid
-    // A better approach might use a global state manager
-    setOrders(prevOrders => [...prevOrders]);
-  }, []);
-
   const handleSearch = useDebouncedCallback((term: string) => {
     setSearchTerm(term.toLowerCase());
   }, 300);
@@ -87,6 +81,12 @@ export default function PaymentListClient({ orders: initialOrders }: { orders: O
   const handlePaymentUpdate = useCallback((paidOrderId: string) => {
     setOrders(currentOrders => currentOrders.map(o => 
         o.id === paidOrderId ? { ...o, paid: true, paid_at: new Date().toISOString() } : o
+    ));
+  }, []);
+
+  const handleNoteUpdate = useCallback((orderId: string, newNotes: string) => {
+    setOrders(currentOrders => currentOrders.map(o => 
+        o.id === orderId ? { ...o, request: { ...o.request, notes: newNotes } } : o
     ));
   }, []);
 
@@ -187,7 +187,7 @@ export default function PaymentListClient({ orders: initialOrders }: { orders: O
       {filteredOrders.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredOrders.map((order) => (
-            <PaymentCard key={order.id} order={order} onPaymentUpdate={() => handlePaymentUpdate(order.id)} />
+            <PaymentCard key={order.id} order={order} onPaymentUpdate={handlePaymentUpdate} onNoteUpdate={handleNoteUpdate} />
           ))}
         </div>
       ) : (

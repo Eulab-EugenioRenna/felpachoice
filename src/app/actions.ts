@@ -69,6 +69,7 @@ export async function submitOrder(prevState: State, formData: FormData): Promise
       phone,
       items: orderItems,
       total,
+      notes: '',
     },
     paid: false,
     paid_at: null,
@@ -109,7 +110,6 @@ export async function markAsPaid(orderId: string): Promise<{ success: boolean; m
             body: JSON.stringify({
                 paid: true,
                 paid_at: new Date().toISOString(),
-                'request.notes': ''
             }),
         });
 
@@ -125,5 +125,31 @@ export async function markAsPaid(orderId: string): Promise<{ success: boolean; m
     } catch (error) {
         console.error('Network error:', error);
         return { success: false, message: 'Errore di rete, impossibile aggiornare lo stato.' };
+    }
+}
+
+
+export async function updateOrderNotes(orderId: string, notes: string): Promise<{ success: boolean; message: string; }> {
+    try {
+        const response = await fetch(`${POCKETBASE_URL}/api/collections/${COLLECTION}/records/${orderId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                'request.notes': notes,
+            }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('PocketBase error:', errorData);
+            return { success: false, message: 'Impossibile aggiornare le note.' };
+        }
+        
+        revalidatePath('/payments');
+        return { success: true, message: 'Note aggiornate con successo!' };
+
+    } catch (error) {
+        console.error('Network error:', error);
+        return { success: false, message: 'Errore di rete, impossibile aggiornare le note.' };
     }
 }
