@@ -109,6 +109,7 @@ export async function markAsPaid(orderId: string): Promise<{ success: boolean; m
             body: JSON.stringify({
                 paid: true,
                 paid_at: new Date().toISOString(),
+                'request.notes': ''
             }),
         });
 

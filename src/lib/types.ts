@@ -31,6 +31,7 @@ export interface Order {
   request: {
     name: string;
     phone: string;
+    notes?: string;
     // Legacy fields for backward compatibility
     sweatshirtType?: SweatshirtType;
     size?: string;

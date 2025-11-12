@@ -36,14 +36,6 @@ const products: Product[] = [
       imageHint: 'green sweatshirt',
       category: 'sweatshirt',
     },
-    {
-      id: 'payper-jacket',
-      name: 'Giacca Ufficiale - PAYPER',
-      price: 28,
-      imageUrl: '/images/zip-sweatshirt.png',
-      imageHint: 'zip sweatshirt',
-      category: 'jacket',
-    },
 ];
 
 const services = ['media', 'welcome', 'security', 'kids'];
