@@ -3,10 +3,7 @@ import { Order, Product } from './types';
 const POCKETBASE_URL = 'https://pocketbase.eulab.cloud';
 const COLLECTION = 'pdg_servizio_felpa';
 
-export async function getOrders(
-  search?: string,
-  category?: Product['category'] | '',
-): Promise<Order[]> {
+export async function getOrders(): Promise<Order[]> {
   
   const url = new URL(
     `/api/collections/${COLLECTION}/records`,
