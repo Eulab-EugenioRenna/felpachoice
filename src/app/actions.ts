@@ -129,13 +129,15 @@ export async function markAsPaid(orderId: string): Promise<{ success: boolean; m
 }
 
 
-export async function updateOrderNotes(orderId: string, notes: string): Promise<{ success: boolean; message: string; }> {
+export async function updateOrderNotes(orderId: string, currentRequestData: object, notes: string): Promise<{ success: boolean; message: string; }> {
+    const updatedRequest = { ...currentRequestData, notes };
+
     try {
         const response = await fetch(`${POCKETBASE_URL}/api/collections/${COLLECTION}/records/${orderId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                'request.notes': notes,
+                request: updatedRequest,
             }),
         });
 

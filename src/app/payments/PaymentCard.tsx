@@ -118,7 +118,7 @@ export function PaymentCard({ order, onPaymentUpdate, onNoteUpdate }: { order: O
 
   const handleUpdateNotes = () => {
     setIsSavingNotes(async () => {
-        const result = await updateOrderNotes(order.id, notes);
+        const result = await updateOrderNotes(order.id, order.request, notes);
         if (result.success) {
             toast({ title: "Successo!", description: result.message });
             onNoteUpdate(order.id, notes);
