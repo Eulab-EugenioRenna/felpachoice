@@ -39,7 +39,7 @@ const products: Product[] = [
 ];
 
 const services = ['media', 'welcome', 'security', 'kids'];
-const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 
 function SubmitButton({ onClick }: { onClick: (e: React.MouseEvent<HTMLButtonElement>) => void }) {
   const [pending, setPending] = useState(false);
@@ -331,3 +331,5 @@ export function OrderForm() {
     </form>
   );
 }
+
+    
