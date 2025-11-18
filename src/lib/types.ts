@@ -28,6 +28,8 @@ export interface Order {
   updated: string;
   paid: boolean;
   paid_at: string;
+  taken: boolean;
+  taken_at: string;
   request: {
     name: string;
     phone: string;

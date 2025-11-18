@@ -73,6 +73,8 @@ export async function submitOrder(prevState: State, formData: FormData): Promise
     },
     paid: false,
     paid_at: null,
+    taken: false,
+    taken_at: null,
   };
   
   try {
@@ -102,12 +104,13 @@ export async function submitOrder(prevState: State, formData: FormData): Promise
 }
 
 
-export async function markAsPaid(orderId: string): Promise<{ success: boolean; message: string; }> {
+export async function markAsPaid(orderId: string, currentRequestData: object): Promise<{ success: boolean; message: string; }> {
     try {
         const response = await fetch(`${POCKETBASE_URL}/api/collections/${COLLECTION}/records/${orderId}`, {
             method: 'PATCH',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
+                request: currentRequestData, // Ensure notes are preserved
                 paid: true,
                 paid_at: new Date().toISOString(),
             }),
@@ -153,5 +156,31 @@ export async function updateOrderNotes(orderId: string, currentRequestData: obje
     } catch (error) {
         console.error('Network error:', error);
         return { success: false, message: 'Errore di rete, impossibile aggiornare le note.' };
+    }
+}
+
+export async function markAsTaken(orderId: string): Promise<{ success: boolean; message: string; }> {
+    try {
+        const response = await fetch(`${POCKETBASE_URL}/api/collections/${COLLECTION}/records/${orderId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                taken: true,
+                taken_at: new Date().toISOString(),
+            }),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('PocketBase error:', errorData);
+            return { success: false, message: 'Impossibile aggiornare lo stato di ritiro.' };
+        }
+        
+        revalidatePath('/payments');
+        return { success: true, message: 'Ordine segnato come ritirato!' };
+
+    } catch (error) {
+        console.error('Network error:', error);
+        return { success: false, message: 'Errore di rete, impossibile aggiornare lo stato.' };
     }
 }

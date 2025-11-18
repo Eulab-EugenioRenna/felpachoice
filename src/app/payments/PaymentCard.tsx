@@ -10,12 +10,12 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { Order } from '@/lib/types';
-import { User, Phone, Calendar, ShoppingCart, CheckCircle2, Hourglass, FileText, Save } from 'lucide-react';
+import { User, Phone, Calendar, ShoppingCart, CheckCircle2, Hourglass, FileText, Save, PackageCheck, Package } from 'lucide-react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { useState, useEffect, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
-import { markAsPaid, updateOrderNotes } from '@/app/actions';
+import { markAsPaid, updateOrderNotes, markAsTaken } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
@@ -75,13 +75,15 @@ const renderOrderContent = (order: Order) => {
 };
 
 
-export function PaymentCard({ order, onPaymentUpdate, onNoteUpdate }: { order: Order, onPaymentUpdate: (id: string) => void, onNoteUpdate: (id: string, notes: string) => void }) {
+export function PaymentCard({ order, onPaymentUpdate, onNoteUpdate, onTakenUpdate }: { order: Order, onPaymentUpdate: (id: string) => void, onNoteUpdate: (id: string, notes: string) => void, onTakenUpdate: (id: string) => void }) {
   const [createdDate, setCreatedDate] = useState('');
   const [paidDate, setPaidDate] = useState('');
+  const [takenDate, setTakenDate] = useState('');
   const [notes, setNotes] = useState(order.request.notes ?? '');
   const { toast } = useToast();
   const [isPaying, setIsPaying] = useTransition();
   const [isSavingNotes, setIsSavingNotes] = useTransition();
+  const [isTaking, setIsTaking] = useTransition();
 
   useEffect(() => {
     try {
@@ -97,7 +99,16 @@ export function PaymentCard({ order, onPaymentUpdate, onNoteUpdate }: { order: O
     } else {
         setPaidDate('');
     }
-  }, [order.created, order.paid, order.paid_at]);
+
+    if(order.taken && order.taken_at) {
+        try {
+            const takenDate = new Date(order.taken_at);
+            setTakenDate(format(takenDate, "d MMM yyyy 'alle' HH:mm", { locale: it }))
+        } catch(e){}
+    } else {
+        setTakenDate('');
+    }
+  }, [order.created, order.paid, order.paid_at, order.taken, order.taken_at]);
 
   useEffect(() => {
     setNotes(order.request.notes ?? '');
@@ -106,7 +117,7 @@ export function PaymentCard({ order, onPaymentUpdate, onNoteUpdate }: { order: O
 
   const handleMarkAsPaid = () => {
     setIsPaying(async () => {
-        const result = await markAsPaid(order.id);
+        const result = await markAsPaid(order.id, order.request);
         if (result.success) {
             toast({ title: "Successo!", description: result.message });
             onPaymentUpdate(order.id);
@@ -127,10 +138,25 @@ export function PaymentCard({ order, onPaymentUpdate, onNoteUpdate }: { order: O
         }
     });
   };
+  
+  const handleMarkAsTaken = () => {
+    setIsTaking(async () => {
+        const result = await markAsTaken(order.id);
+        if (result.success) {
+            toast({ title: "Successo!", description: result.message });
+            onTakenUpdate(order.id);
+        } else {
+            toast({ title: "Errore", description: result.message, variant: "destructive" });
+        }
+    });
+  };
 
 
   return (
-    <Card className={`flex flex-col h-full shadow-md transition-all duration-300 ${order.paid ? 'bg-green-50 border-green-200' : 'bg-card'}`}>
+    <Card className={`flex flex-col h-full shadow-md transition-all duration-300 
+      ${order.taken ? 'bg-gray-100 border-gray-200 opacity-80' : 
+      order.paid ? 'bg-green-50 border-green-200' : 'bg-card'
+    }`}>
       {renderOrderContent(order)}
        <CardContent className="flex-grow">
           <div className="space-y-2">
@@ -144,8 +170,9 @@ export function PaymentCard({ order, onPaymentUpdate, onNoteUpdate }: { order: O
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 className="text-sm"
+                disabled={order.taken}
             />
-            <Button onClick={handleUpdateNotes} disabled={isSavingNotes} size="sm" variant="outline" className="w-full">
+            <Button onClick={handleUpdateNotes} disabled={isSavingNotes || order.taken} size="sm" variant="outline" className="w-full">
                 {isSavingNotes ? 'Salvataggio...' : <> <Save className="mr-2 h-4 w-4" /> Aggiorna Nota </>}
             </Button>
           </div>
@@ -157,7 +184,11 @@ export function PaymentCard({ order, onPaymentUpdate, onNoteUpdate }: { order: O
                 <Calendar className="w-4 h-4" />
                 {createdDate ? <span>Ordinato il: {createdDate}</span> : <span>Caricamento data...</span>}
             </div>
-            {order.paid ? (
+             {order.taken ? (
+                <Badge variant="default" className="bg-gray-500 hover:bg-gray-600">
+                    <PackageCheck className="w-4 h-4 mr-1" /> Ritirato
+                </Badge>
+            ) : order.paid ? (
                 <Badge variant="default" className="bg-green-600 hover:bg-green-700">
                     <CheckCircle2 className="w-4 h-4 mr-1" /> Pagato
                 </Badge>
@@ -168,18 +199,33 @@ export function PaymentCard({ order, onPaymentUpdate, onNoteUpdate }: { order: O
             )}
         </div>
         
-        {order.paid && paidDate && (
+        {order.taken && takenDate && (
+            <div className="flex items-center gap-2 text-xs text-gray-600 font-medium">
+                <PackageCheck className="w-4 h-4" />
+                <span>Ritirato il: {takenDate}</span>
+            </div>
+        )}
+        
+        {order.paid && !order.taken && paidDate && (
              <div className="flex items-center gap-2 text-xs text-green-700 font-medium">
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Pagato il: {paidDate}</span>
             </div>
         )}
         
-        {!order.paid && (
-            <Button onClick={handleMarkAsPaid} disabled={isPaying} className="w-full">
-                {isPaying ? 'Attendere...' : 'Segna come Pagato'}
-            </Button>
-        )}
+        <div className="w-full space-y-2">
+            {!order.paid && !order.taken && (
+                <Button onClick={handleMarkAsPaid} disabled={isPaying} className="w-full">
+                    {isPaying ? 'Attendere...' : 'Segna come Pagato'}
+                </Button>
+            )}
+            {order.paid && !order.taken && (
+                <Button onClick={handleMarkAsTaken} disabled={isTaking} variant="secondary" className="w-full">
+                    {isTaking ? 'Attendere...' : 'Segna come Ritirato'}
+                </Button>
+            )}
+        </div>
+
       </CardFooter>
     </Card>
   );

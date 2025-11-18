@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { PaymentCard } from './PaymentCard';
 import type { Order } from '@/lib/types';
-import { Search, ListFilter, X, Euro, Wallet, PiggyBank } from 'lucide-react';
+import { Search, ListFilter, X, Euro, Wallet, PiggyBank, PackageCheck } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +18,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 type FilterCategory = 'paidStatus';
 
@@ -41,9 +42,8 @@ export default function PaymentListClient({ orders: initialOrders }: { orders: O
     });
   };
 
-  const filteredOrders = useMemo(() => {
-    // We filter based on the local 'orders' state to reflect payment updates instantly
-    return orders.filter(order => {
+  const { filteredOrders, activeOrders, takenOrders } = useMemo(() => {
+    const filtered = orders.filter(order => {
       const searchMatch = !searchTerm ||
         order.request.name.toLowerCase().includes(searchTerm) ||
         (order.request.phone && order.request.phone.toLowerCase().includes(searchTerm));
@@ -56,9 +56,16 @@ export default function PaymentListClient({ orders: initialOrders }: { orders: O
       
       return filterMatch;
     }).sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
+
+    return {
+        filteredOrders: filtered,
+        activeOrders: filtered.filter(o => !o.taken),
+        takenOrders: filtered.filter(o => o.taken),
+    }
   }, [orders, searchTerm, filters]);
 
   const { totalAmount, paidAmount, remainingAmount } = useMemo(() => {
+    // Financial summary is calculated on all filtered orders, regardless of 'taken' status
     return filteredOrders.reduce((acc, order) => {
       const orderTotal = order.request.total ?? order.request.price ?? 0;
       acc.totalAmount += orderTotal;
@@ -87,6 +94,12 @@ export default function PaymentListClient({ orders: initialOrders }: { orders: O
   const handleNoteUpdate = useCallback((orderId: string, newNotes: string) => {
     setOrders(currentOrders => currentOrders.map(o => 
         o.id === orderId ? { ...o, request: { ...o.request, notes: newNotes } } : o
+    ));
+  }, []);
+
+  const handleTakenUpdate = useCallback((takenOrderId: string) => {
+    setOrders(currentOrders => currentOrders.map(o => 
+        o.id === takenOrderId ? { ...o, taken: true, taken_at: new Date().toISOString() } : o
     ));
   }, []);
 
@@ -157,7 +170,7 @@ export default function PaymentListClient({ orders: initialOrders }: { orders: O
       
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle>Riepilogo Finanziario</CardTitle>
+          <CardTitle>Riepilogo Finanziario (basato sui filtri)</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
             <div className="p-4 bg-muted/50 rounded-lg">
@@ -184,20 +197,41 @@ export default function PaymentListClient({ orders: initialOrders }: { orders: O
         </CardContent>
       </Card>
 
-      {filteredOrders.length > 0 ? (
+      {activeOrders.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredOrders.map((order) => (
-            <PaymentCard key={order.id} order={order} onPaymentUpdate={handlePaymentUpdate} onNoteUpdate={handleNoteUpdate} />
+          {activeOrders.map((order) => (
+            <PaymentCard key={order.id} order={order} onPaymentUpdate={handlePaymentUpdate} onNoteUpdate={handleNoteUpdate} onTakenUpdate={handleTakenUpdate} />
           ))}
         </div>
       ) : (
-        <div className="text-center py-16 border-2 border-dashed rounded-lg">
-          <p className="text-muted-foreground">Nessun ordine trovato.</p>
+        <div className="text-center py-16 border-2 border-dashed rounded-lg mb-8">
+          <p className="text-muted-foreground">Nessun ordine attivo trovato.</p>
           <p className="text-sm text-muted-foreground">
-            Prova a modificare i filtri o il termine di ricerca.
+            Tutti gli ordini sono stati ritirati o i filtri non producono risultati.
           </p>
         </div>
       )}
+
+      {takenOrders.length > 0 && (
+          <Accordion type="single" collapsible className="w-full mt-8">
+              <AccordionItem value="item-1">
+                  <AccordionTrigger>
+                      <h2 className="text-xl font-semibold flex items-center gap-2">
+                        <PackageCheck className="w-6 h-6" />
+                        Ordini Ritirati ({takenOrders.length})
+                      </h2>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
+                          {takenOrders.map((order) => (
+                              <PaymentCard key={order.id} order={order} onPaymentUpdate={handlePaymentUpdate} onNoteUpdate={handleNoteUpdate} onTakenUpdate={handleTakenUpdate} />
+                          ))}
+                      </div>
+                  </AccordionContent>
+              </AccordionItem>
+          </Accordion>
+      )}
+
     </div>
   );
 }
