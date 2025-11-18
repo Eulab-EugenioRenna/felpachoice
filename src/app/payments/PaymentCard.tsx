@@ -10,12 +10,12 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { Order } from '@/lib/types';
-import { User, Phone, Calendar, ShoppingCart, CheckCircle2, Hourglass, FileText, Save, PackageCheck, Package } from 'lucide-react';
+import { User, Phone, Calendar, ShoppingCart, CheckCircle2, Hourglass, FileText, Save, PackageCheck, Trash2, Pencil } from 'lucide-react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { useState, useEffect, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
-import { markAsPaid, updateOrderNotes, markAsTaken } from '@/app/actions';
+import { markAsPaid, updateOrderNotes, markAsTaken, deleteOrder } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
@@ -30,6 +30,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { EditOrderForm } from '@/components/EditOrderForm';
 
 
 const renderOrderContent = (order: Order) => {
@@ -86,15 +88,24 @@ const renderOrderContent = (order: Order) => {
 };
 
 
-export function PaymentCard({ order, onPaymentUpdate, onNoteUpdate, onTakenUpdate }: { order: Order, onPaymentUpdate: (id: string) => void, onNoteUpdate: (id: string, notes: string) => void, onTakenUpdate: (id: string) => void }) {
+export function PaymentCard({ order, onPaymentUpdate, onNoteUpdate, onTakenUpdate, onOrderDelete, onOrderUpdate }: { 
+    order: Order, 
+    onPaymentUpdate: (id: string) => void, 
+    onNoteUpdate: (id: string, notes: string) => void, 
+    onTakenUpdate: (id: string) => void,
+    onOrderDelete: (id: string) => void,
+    onOrderUpdate: (order: Order) => void,
+}) {
   const [createdDate, setCreatedDate] = useState('');
   const [paidDate, setPaidDate] = useState('');
   const [takenDate, setTakenDate] = useState('');
   const [notes, setNotes] = useState(order.request.notes ?? '');
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { toast } = useToast();
   const [isPaying, setIsPaying] = useTransition();
   const [isSavingNotes, setIsSavingNotes] = useTransition();
   const [isTaking, setIsTaking] = useTransition();
+  const [isDeleting, setIsDeleting] = useTransition();
 
   useEffect(() => {
     try {
@@ -162,13 +173,72 @@ export function PaymentCard({ order, onPaymentUpdate, onNoteUpdate, onTakenUpdat
     });
   };
 
+  const handleDeleteOrder = () => {
+    setIsDeleting(async () => {
+      const result = await deleteOrder(order.id);
+      if (result.success) {
+        toast({ title: "Successo!", description: result.message });
+        onOrderDelete(order.id);
+      } else {
+        toast({ title: "Errore", description: result.message, variant: "destructive" });
+      }
+    });
+  };
+
+  const handleUpdateSuccess = (updatedOrder: Order) => {
+    setIsEditDialogOpen(false);
+    onOrderUpdate(updatedOrder);
+  };
+
 
   return (
     <Card className={`flex flex-col h-full shadow-md transition-all duration-300 
       ${order.taken ? 'bg-gray-100 border-gray-200 opacity-80' : 
       order.paid ? 'bg-green-50 border-green-200' : 'bg-card'
     }`}>
-      {renderOrderContent(order)}
+      <div className="relative">
+        {renderOrderContent(order)}
+        {!order.paid && !order.taken && (
+            <div className="absolute top-2 right-2 flex gap-1">
+                <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button variant="ghost" size="icon" aria-label="Modifica Ordine">
+                            <Pencil className="h-5 w-5 text-blue-600" />
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                            <DialogTitle>Modifica Ordine</DialogTitle>
+                        </DialogHeader>
+                        <EditOrderForm order={order} onUpdateSuccess={handleUpdateSuccess} />
+                    </DialogContent>
+                </Dialog>
+                
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                         <Button variant="ghost" size="icon" aria-label="Elimina Ordine">
+                            <Trash2 className="h-5 w-5 text-destructive" />
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Conferma Eliminazione</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Sei sicuro di voler eliminare questo ordine? L'azione è irreversibile.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Annulla</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDeleteOrder} disabled={isDeleting}>
+                                {isDeleting ? 'Eliminazione...' : 'Conferma Elimina'}
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+            </div>
+        )}
+      </div>
+
        <CardContent className="flex-grow">
           <div className="space-y-2">
             <label htmlFor={`notes-${order.id}`} className="flex items-center gap-2 font-semibold">

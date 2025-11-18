@@ -103,6 +103,16 @@ export default function PaymentListClient({ orders: initialOrders }: { orders: O
     ));
   }, []);
 
+  const handleOrderDelete = useCallback((deletedOrderId: string) => {
+    setOrders(currentOrders => currentOrders.filter(o => o.id !== deletedOrderId));
+  }, []);
+
+  const handleOrderUpdate = useCallback((updatedOrder: Order) => {
+    setOrders(currentOrders => currentOrders.map(o => 
+      o.id === updatedOrder.id ? updatedOrder : o
+    ));
+  }, []);
+
 
   const FilterDropdown = ({ category, title, options }: { category: FilterCategory, title: string, options: {label: string, value: string}[] }) => (
     <DropdownMenu>
@@ -200,7 +210,7 @@ export default function PaymentListClient({ orders: initialOrders }: { orders: O
       {activeOrders.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {activeOrders.map((order) => (
-            <PaymentCard key={order.id} order={order} onPaymentUpdate={handlePaymentUpdate} onNoteUpdate={handleNoteUpdate} onTakenUpdate={handleTakenUpdate} />
+            <PaymentCard key={order.id} order={order} onPaymentUpdate={handlePaymentUpdate} onNoteUpdate={handleNoteUpdate} onTakenUpdate={handleTakenUpdate} onOrderDelete={handleOrderDelete} onOrderUpdate={handleOrderUpdate}/>
           ))}
         </div>
       ) : (
@@ -224,7 +234,7 @@ export default function PaymentListClient({ orders: initialOrders }: { orders: O
                   <AccordionContent>
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
                           {takenOrders.map((order) => (
-                              <PaymentCard key={order.id} order={order} onPaymentUpdate={handlePaymentUpdate} onNoteUpdate={handleNoteUpdate} onTakenUpdate={handleTakenUpdate} />
+                              <PaymentCard key={order.id} order={order} onPaymentUpdate={handlePaymentUpdate} onNoteUpdate={handleNoteUpdate} onTakenUpdate={handleTakenUpdate} onOrderDelete={handleOrderDelete} onOrderUpdate={handleOrderUpdate} />
                           ))}
                       </div>
                   </AccordionContent>

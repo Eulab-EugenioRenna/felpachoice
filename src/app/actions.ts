@@ -103,6 +103,89 @@ export async function submitOrder(prevState: State, formData: FormData): Promise
   }
 }
 
+export async function updateOrder(orderId: string, prevState: State, formData: FormData): Promise<State> {
+  let items: OrderItem[];
+  try {
+    const itemsJson = formData.get('orderItems') as string;
+    items = JSON.parse(itemsJson);
+  } catch (e) {
+    return { message: "Errore nell'elaborazione degli articoli.", success: false };
+  }
+
+  const validatedFields = orderSchema.safeParse({
+    name: formData.get('name'),
+    phone: formData.get('phone'),
+    orderItems: items,
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      message: 'Compila i campi mancanti.',
+      success: false,
+    };
+  }
+
+  const { name, phone, orderItems } = validatedFields.data;
+  const total = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const notes = formData.get('notes') as string || '';
+
+
+  const requestPayload = {
+    request: {
+      name,
+      phone,
+      items: orderItems,
+      total,
+      notes,
+    },
+  };
+
+  try {
+    const response = await fetch(`${POCKETBASE_URL}/api/collections/${COLLECTION}/records/${orderId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestPayload),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return { message: `Errore durante l'aggiornamento: ${errorData.message || 'dettagli non disponibili'}.`, success: false };
+    }
+
+    revalidatePath('/payments');
+    return { message: 'Ordine aggiornato con successo!', success: true };
+  } catch (error) {
+    console.error('Network error:', error);
+    return { message: 'Errore di rete: Impossibile connettersi al database.', success: false };
+  }
+}
+
+export async function deleteOrder(orderId: string): Promise<{ success: boolean; message: string; }> {
+    try {
+        const response = await fetch(`${POCKETBASE_URL}/api/collections/${COLLECTION}/records/${orderId}`, {
+            method: 'DELETE',
+        });
+
+        if (!response.ok) {
+           let message = 'Impossibile eliminare l\'ordine.';
+            try {
+                const errorData = await response.json();
+                console.error('PocketBase error:', errorData);
+                message = errorData.message || message;
+            } catch (e) {}
+            return { success: false, message: message };
+        }
+        
+        revalidatePath('/payments');
+        return { success: true, message: 'Ordine eliminato con successo!' };
+
+    } catch (error) {
+        console.error('Network error:', error);
+        return { success: false, message: 'Errore di rete, impossibile eliminare l\'ordine.' };
+    }
+}
+
 
 export async function markAsPaid(orderId: string, currentRequestData: object): Promise<{ success: boolean; message: string; }> {
     try {
