@@ -196,50 +196,9 @@ export function PaymentCard({ order, onPaymentUpdate, onNoteUpdate, onTakenUpdat
       ${order.taken ? 'bg-gray-100 border-gray-200 opacity-80' : 
       order.paid ? 'bg-green-50 border-green-200' : 'bg-card'
     }`}>
-      <div className="relative">
-        {renderOrderContent(order)}
-        {!order.paid && !order.taken && (
-            <div className="absolute top-2 right-2 flex gap-1">
-                <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                    <DialogTrigger asChild>
-                        <Button variant="ghost" size="icon" aria-label="Modifica Ordine">
-                            <Pencil className="h-5 w-5 text-blue-600" />
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl">
-                        <DialogHeader>
-                            <DialogTitle>Modifica Ordine</DialogTitle>
-                        </DialogHeader>
-                        <EditOrderForm order={order} onUpdateSuccess={handleUpdateSuccess} />
-                    </DialogContent>
-                </Dialog>
-                
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                         <Button variant="ghost" size="icon" aria-label="Elimina Ordine">
-                            <Trash2 className="h-5 w-5 text-destructive" />
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Conferma Eliminazione</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Sei sicuro di voler eliminare questo ordine? L'azione è irreversibile.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Annulla</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDeleteOrder} disabled={isDeleting}>
-                                {isDeleting ? 'Eliminazione...' : 'Conferma Elimina'}
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-            </div>
-        )}
-      </div>
-
-       <CardContent className="flex-grow">
+      {renderOrderContent(order)}
+      
+       <CardContent className="flex-grow space-y-4">
           <div className="space-y-2">
             <label htmlFor={`notes-${order.id}`} className="flex items-center gap-2 font-semibold">
                 <FileText className="w-5 h-5" />
@@ -257,6 +216,50 @@ export function PaymentCard({ order, onPaymentUpdate, onNoteUpdate, onTakenUpdat
                 {isSavingNotes ? 'Salvataggio...' : <> <Save className="mr-2 h-4 w-4" /> Aggiorna Nota </>}
             </Button>
           </div>
+
+          {!order.paid && !order.taken && (
+             <div className="pt-2">
+                <Separator className="mb-4" />
+                <div className="flex justify-end gap-2">
+                    <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button variant="outline" size="sm" aria-label="Modifica Ordine">
+                                <Pencil className="h-4 w-4" />
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl">
+                            <DialogHeader>
+                                <DialogTitle>Modifica Ordine</DialogTitle>
+                            </DialogHeader>
+                            <EditOrderForm order={order} onUpdateSuccess={handleUpdateSuccess} />
+                        </DialogContent>
+                    </Dialog>
+                    
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive" size="sm" aria-label="Elimina Ordine">
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Conferma Eliminazione</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    Sei sicuro di voler eliminare questo ordine? L'azione è irreversibile.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Annulla</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDeleteOrder} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+                                    {isDeleting ? 'Eliminazione...' : 'Conferma Elimina'}
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </div>
+            </div>
+          )}
+
        </CardContent>
        <Separator className="my-4" />
       <CardFooter className="flex-col items-start gap-4">
