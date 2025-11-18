@@ -19,6 +19,17 @@ import { markAsPaid, updateOrderNotes, markAsTaken } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 
 const renderOrderContent = (order: Order) => {
@@ -215,14 +226,50 @@ export function PaymentCard({ order, onPaymentUpdate, onNoteUpdate, onTakenUpdat
         
         <div className="w-full space-y-2">
             {!order.paid && !order.taken && (
-                <Button onClick={handleMarkAsPaid} disabled={isPaying} className="w-full">
-                    {isPaying ? 'Attendere...' : 'Segna come Pagato'}
-                </Button>
+                 <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button disabled={isPaying} className="w-full">
+                            {isPaying ? 'Attendere...' : 'Segna come Pagato'}
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Conferma Pagamento</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Sei sicuro di voler segnare questo ordine come pagato? L'azione non può essere annullata.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Annulla</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleMarkAsPaid}>
+                                Conferma Pagamento
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             )}
             {order.paid && !order.taken && (
-                <Button onClick={handleMarkAsTaken} disabled={isTaking} variant="secondary" className="w-full">
-                    {isTaking ? 'Attendere...' : 'Segna come Ritirato'}
-                </Button>
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <Button disabled={isTaking} variant="secondary" className="w-full">
+                            {isTaking ? 'Attendere...' : 'Segna come Ritirato'}
+                        </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Conferma Ritiro</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Sei sicuro di voler segnare questo ordine come ritirato? L'azione non può essere annullata.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Annulla</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleMarkAsTaken}>
+                                Conferma Ritiro
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             )}
         </div>
 
