@@ -20,19 +20,62 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
-type FilterCategory = 'paidStatus';
+type FilterCategory = 'paidStatus' | 'brand' | 'type' | 'size' | 'service';
 
 export default function PaymentListClient({ orders: initialOrders }: { orders: Order[] }) {
   const [orders, setOrders] = useState(initialOrders);
   const [searchTerm, setSearchTerm] = useState('');
   const [filters, setFilters] = useState<Record<FilterCategory, string[]>>({
     paidStatus: [],
+    brand: [],
+    type: [],
+    size: [],
+    service: [],
   });
 
   const handleSearch = useDebouncedCallback((term: string) => {
     setSearchTerm(term.toLowerCase());
   }, 300);
   
+  const { availableFilters } = useMemo(() => {
+    const brandSet = new Set<string>();
+    const typeSet = new Set<string>();
+    const sizeSet = new Set<string>();
+    const serviceSet = new Set<string>();
+
+    initialOrders.forEach(order => {
+      if (order.request.items && Array.isArray(order.request.items)) {
+        order.request.items.forEach(item => {
+          const brand = item.productId.includes('payper') ? 'PAYPER' : 'JHK';
+          brandSet.add(brand);
+          if (item.category) typeSet.add(item.category);
+          if(item.size) sizeSet.add(item.size);
+          if(item.service) serviceSet.add(item.service);
+        });
+      } else { // Legacy
+        if(order.request.service) serviceSet.add(order.request.service);
+        if(order.request.size) sizeSet.add(order.request.size);
+        
+        if (order.request.sweatshirtType === 'default') {
+          typeSet.add('sweatshirt');
+        } else if (order.request.sweatshirtType === 'zip') {
+          typeSet.add('jacket');
+        }
+      }
+    });
+    
+    return {
+      availableFilters: {
+        paidStatus: ['paid', 'unpaid'],
+        brand: Array.from(brandSet).sort(),
+        type: Array.from(typeSet).sort(),
+        size: Array.from(sizeSet).sort((a,b) => a.localeCompare(b)),
+        service: Array.from(serviceSet).sort(),
+      },
+    };
+  }, [initialOrders]);
+
+
   const handleFilterChange = (category: FilterCategory, value: string) => {
     setFilters(prev => {
       const newValues = prev[category].includes(value)
@@ -46,15 +89,53 @@ export default function PaymentListClient({ orders: initialOrders }: { orders: O
     const filtered = orders.filter(order => {
       const searchMatch = !searchTerm ||
         order.request.name.toLowerCase().includes(searchTerm) ||
-        (order.request.phone && order.request.phone.toLowerCase().includes(searchTerm));
+        (order.request.phone && order.request.phone.toLowerCase().includes(searchTerm)) ||
+        (order.request.items && order.request.items.some(item => 
+          item.productName.toLowerCase().includes(searchTerm) ||
+          item.service.toLowerCase().includes(searchTerm)
+        )) ||
+        (order.request.service && order.request.service.toLowerCase().includes(searchTerm));
 
       if (!searchMatch) return false;
-
-      const filterMatch = filters.paidStatus.length === 0 || 
-        (filters.paidStatus.includes('paid') && order.paid) ||
-        (filters.paidStatus.includes('unpaid') && !order.paid);
       
+      const filterMatch = Object.entries(filters).every(([category, values]) => {
+          if (values.length === 0) return true;
+          
+          const cat = category as FilterCategory;
+
+          if (cat === 'paidStatus') {
+            return (values.includes('paid') && order.paid) || (values.includes('unpaid') && !order.paid);
+          }
+
+          if (order.request.items && order.request.items.length > 0) {
+              return order.request.items.some(item => {
+                  if (cat === 'brand') return values.includes(item.productId.includes('payper') ? 'PAYPER' : 'JHK');
+                  if (cat === 'type') return values.includes(item.category);
+                  if (cat === 'size') return values.includes(item.size);
+                  if (cat === 'service') return values.includes(item.service);
+                  return false;
+              });
+          }
+          
+          // Legacy order format check
+          switch(cat) {
+              case 'size':
+                  return order.request.size ? values.includes(order.request.size) : false;
+              case 'service':
+                  return order.request.service ? values.includes(order.request.service) : false;
+              case 'type':
+                  if (order.request.sweatshirtType === 'default' && values.includes('sweatshirt')) return true;
+                  if (order.request.sweatshirtType === 'zip' && values.includes('jacket')) return true;
+                  return false;
+              case 'brand':
+                  return false;
+              default:
+                  return false;
+          }
+      });
+
       return filterMatch;
+
     }).sort((a, b) => new Date(b.created).getTime() - new Date(a.created).getTime());
 
     return {
@@ -82,7 +163,7 @@ export default function PaymentListClient({ orders: initialOrders }: { orders: O
   const activeFilterCount = Object.values(filters).reduce((acc, v) => acc + v.length, 0);
 
   const clearFilters = () => {
-    setFilters({ paidStatus: [] });
+    setFilters({ paidStatus: [], brand: [], type: [], size: [], service: [] });
   };
   
   const handlePaymentUpdate = useCallback((paidOrderId: string) => {
@@ -114,7 +195,7 @@ export default function PaymentListClient({ orders: initialOrders }: { orders: O
   }, []);
 
 
-  const FilterDropdown = ({ category, title, options }: { category: FilterCategory, title: string, options: {label: string, value: string}[] }) => (
+  const FilterDropdown = ({ category, title, options }: { category: FilterCategory, title: string, options: {label: string, value: string}[] | string[] }) => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" className="w-full md:w-auto justify-between h-12">
@@ -130,16 +211,20 @@ export default function PaymentListClient({ orders: initialOrders }: { orders: O
       <DropdownMenuContent>
         <DropdownMenuLabel>{title}</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {options.map(option => (
-          <DropdownMenuCheckboxItem
-            key={option.value}
-            checked={filters[category].includes(option.value)}
-            onSelect={(e) => e.preventDefault()}
-            onCheckedChange={() => handleFilterChange(category, option.value)}
-          >
-            {option.label}
-          </DropdownMenuCheckboxItem>
-        ))}
+        {options.map(option => {
+          const value = typeof option === 'string' ? option : option.value;
+          const label = typeof option === 'string' ? option : option.label;
+          return (
+            <DropdownMenuCheckboxItem
+              key={value}
+              checked={filters[category].includes(value)}
+              onSelect={(e) => e.preventDefault()}
+              onCheckedChange={() => handleFilterChange(category, value)}
+            >
+              {label}
+            </DropdownMenuCheckboxItem>
+          )
+        })}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -155,13 +240,17 @@ export default function PaymentListClient({ orders: initialOrders }: { orders: O
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Cerca per nome o telefono..."
+                placeholder="Cerca per nome, telefono, articolo..."
                 className="pl-10 h-12 w-full"
                 onChange={(e) => handleSearch(e.target.value)}
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <FilterDropdown category="paidStatus" title="Stato Pagamento" options={[{label: 'Pagato', value: 'paid'}, {label: 'Non Pagato', value: 'unpaid'}]} />
+                <FilterDropdown category="brand" title="Marca" options={availableFilters.brand} />
+                <FilterDropdown category="type" title="Tipo" options={availableFilters.type} />
+                <FilterDropdown category="size" title="Taglia" options={availableFilters.size} />
+                <FilterDropdown category="service" title="Servizio" options={availableFilters.service} />
             </div>
             {activeFilterCount > 0 && (
               <>
@@ -245,3 +334,5 @@ export default function PaymentListClient({ orders: initialOrders }: { orders: O
     </div>
   );
 }
+
+    
