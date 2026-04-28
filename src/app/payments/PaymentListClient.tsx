@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { PaymentCard } from './PaymentCard';
 import type { Order } from '@/lib/types';
-import { getCategoryLabel } from '@/lib/catalog';
+import { getCategoryLabel, normalizeProductCategory } from '@/lib/catalog';
 import { Search, ListFilter, X, Euro, Wallet, PiggyBank, PackageCheck } from 'lucide-react';
 import {
   DropdownMenu,
@@ -49,7 +49,7 @@ export default function PaymentListClient({ orders: initialOrders }: { orders: O
         order.request.items.forEach(item => {
           const brand = item.productId.includes('payper') ? 'PAYPER' : 'JHK';
           brandSet.add(brand);
-          if (item.category) typeSet.add(item.category);
+          if (item.category) typeSet.add(normalizeProductCategory(item.category));
           if(item.size) sizeSet.add(item.size);
           if(item.service) serviceSet.add(item.service);
         });
@@ -109,7 +109,7 @@ export default function PaymentListClient({ orders: initialOrders }: { orders: O
           if (order.request.items && order.request.items.length > 0) {
               return order.request.items.some(item => {
                   if (cat === 'brand') return values.includes(item.productId.includes('payper') ? 'PAYPER' : 'JHK');
-                  if (cat === 'type') return values.includes(item.category);
+                  if (cat === 'type') return values.includes(normalizeProductCategory(item.category));
                   if (cat === 'size') return values.includes(item.size);
                   if (cat === 'service') return values.includes(item.service);
                   return false;

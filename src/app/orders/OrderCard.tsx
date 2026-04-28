@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import type { Order } from '@/lib/types';
-import { getCategoryLabel, getLegacyCategoryLabel } from '@/lib/catalog';
+import { getCategoryLabel, getLegacyCategoryLabel, normalizeProductCategory } from '@/lib/catalog';
 import { Shirt, User, Phone, Calendar, Tag, Briefcase, Ruler, ShoppingCart } from 'lucide-react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -98,7 +98,7 @@ const renderNewOrder = (order: Order) => {
                         <div key={index} className="flex justify-between items-start text-sm p-2 border-l-4 border-accent rounded-r-md bg-muted/50">
                             <div>
                                 <p className="font-semibold">{item.productName} (x{item.quantity})</p>
-                                <p className="text-muted-foreground">Tipo: {getCategoryLabel(item.category)}</p>
+                                <p className="text-muted-foreground">Tipo: {getCategoryLabel(normalizeProductCategory(item.category))}</p>
                                 <p className="text-muted-foreground">Taglia: {item.size}, Servizio: {item.service}</p>
                             </div>
                             <p className="font-medium whitespace-nowrap">€{(item.price * item.quantity).toFixed(2)}</p>

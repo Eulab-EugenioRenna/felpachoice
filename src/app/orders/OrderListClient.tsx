@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { OrderCard } from './OrderCard';
 import type { Order } from '@/lib/types';
-import { getCategoryLabel } from '@/lib/catalog';
+import { getCategoryLabel, normalizeProductCategory } from '@/lib/catalog';
 import { Search, ListFilter, Briefcase, Ruler, X, ShoppingCart, Euro } from 'lucide-react';
 import {
   DropdownMenu,
@@ -50,7 +50,7 @@ export default function OrderListClient({ orders: initialOrders }: { orders: Ord
           const brand = item.productId.includes('payper') ? 'PAYPER' : 'JHK';
           brandSet.add(brand);
           if (item.category) {
-            typeSet.add(item.category);
+            typeSet.add(normalizeProductCategory(item.category));
           }
           if(item.size) sizeSet.add(item.size);
           if(item.service) serviceSet.add(item.service);
@@ -114,7 +114,7 @@ export default function OrderListClient({ orders: initialOrders }: { orders: Ord
         if (order.request.items && order.request.items.length > 0) {
             return order.request.items.some(item => {
                 if (category === 'brand') return values.includes(item.productId.includes('payper') ? 'PAYPER' : 'JHK');
-                if (category === 'type') return values.includes(item.category);
+                if (category === 'type') return values.includes(normalizeProductCategory(item.category));
                 if (category === 'size') return values.includes(item.size);
                 if (category === 'service') return values.includes(item.service);
                 return false; // Should not happen

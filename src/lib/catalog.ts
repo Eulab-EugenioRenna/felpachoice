@@ -60,6 +60,10 @@ export function getServicesForCategory(category: ProductCategory) {
   return servicesByCategory[category];
 }
 
+export function normalizeProductCategory(category?: string): ProductCategory {
+  return category === 'maglia' || category === 'tshirt' ? 'maglia' : 'felpa';
+}
+
 export function getCategoryLabel(category: ProductCategory) {
   return category === 'felpa' ? 'Felpa' : 'Maglia';
 }
