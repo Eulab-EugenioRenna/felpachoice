@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { PaymentCard } from './PaymentCard';
 import type { Order } from '@/lib/types';
+import { getCategoryLabel } from '@/lib/catalog';
 import { Search, ListFilter, X, Euro, Wallet, PiggyBank, PackageCheck } from 'lucide-react';
 import {
   DropdownMenu,
@@ -56,10 +57,8 @@ export default function PaymentListClient({ orders: initialOrders }: { orders: O
         if(order.request.service) serviceSet.add(order.request.service);
         if(order.request.size) sizeSet.add(order.request.size);
         
-        if (order.request.sweatshirtType === 'default') {
-          typeSet.add('sweatshirt');
-        } else if (order.request.sweatshirtType === 'zip') {
-          typeSet.add('jacket');
+        if (order.request.sweatshirtType) {
+          typeSet.add('felpa');
         }
       }
     });
@@ -123,10 +122,8 @@ export default function PaymentListClient({ orders: initialOrders }: { orders: O
                   return order.request.size ? values.includes(order.request.size) : false;
               case 'service':
                   return order.request.service ? values.includes(order.request.service) : false;
-              case 'type':
-                  if (order.request.sweatshirtType === 'default' && values.includes('sweatshirt')) return true;
-                  if (order.request.sweatshirtType === 'zip' && values.includes('jacket')) return true;
-                  return false;
+               case 'type':
+                   return values.includes('felpa');
               case 'brand':
                   return false;
               default:
@@ -221,7 +218,7 @@ export default function PaymentListClient({ orders: initialOrders }: { orders: O
               onSelect={(e) => e.preventDefault()}
               onCheckedChange={() => handleFilterChange(category, value)}
             >
-              {label}
+              {category === 'type' ? getCategoryLabel(value as 'felpa' | 'maglia') : label}
             </DropdownMenuCheckboxItem>
           )
         })}

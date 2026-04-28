@@ -13,7 +13,7 @@ const ptSans = PT_Sans({
 
 export const metadata: Metadata = {
   title: 'FelpaChoice',
-  description: 'Scegli la tua felpa personalizzata.',
+  description: 'Scegli felpa o maglia e crea il tuo ordine.',
 };
 
 export default function RootLayout({

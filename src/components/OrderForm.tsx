@@ -16,30 +16,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { OrderItem, Product } from '@/lib/types';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
-
-const products: Product[] = [
-    {
-      id: 'jhk-sweatshirt',
-      name: 'Felpa Ufficiale - JHK',
-      price: 12,
-      imageUrl: '/images/default-sweatshirt.png',
-      imageHint: 'green sweatshirt',
-      category: 'sweatshirt',
-    },
-    {
-      id: 'payper-sweatshirt',
-      name: 'Felpa Ufficiale - PAYPER',
-      price: 15,
-      imageUrl: '/images/default-sweatshirt.png',
-      imageHint: 'green sweatshirt',
-      category: 'sweatshirt',
-    },
-];
-
-const services = ['media', 'welcome', 'security', 'kids'];
-const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+import type { OrderItem } from '@/lib/types';
+import { getPlaceholderImage, getServicesForCategory, products, sizes } from '@/lib/catalog';
 
 function SubmitButton({ onClick }: { onClick: (e: React.MouseEvent<HTMLButtonElement>) => void }) {
   const [pending, setPending] = useState(false);
@@ -82,25 +60,16 @@ export function OrderForm() {
     return products.find(p => p.id === currentItem.productId);
   }, [currentItem.productId]);
 
+  const availableServices = useMemo(() => {
+    return getServicesForCategory(selectedProduct?.category ?? 'felpa');
+  }, [selectedProduct]);
+
   const currentImage = useMemo(() => {
     if (!selectedProduct) return null;
 
-    const service = currentItem.service;
-    if (service) {
-      const category = selectedProduct.category === 'jacket' ? 'zip' : 'default';
-      const imageKey = `${category}-${service}`;
-      const serviceImage = PlaceHolderImages.find(img => img.id === imageKey);
-      if (serviceImage) {
-        return serviceImage;
-      }
-    }
-    
-    // Fallback for when service is not selected or image not found
-    const defaultImageKey = selectedProduct.category === 'jacket' ? 'zip-none' : 'default-none';
-    const defaultImage = PlaceHolderImages.find(img => img.id === defaultImageKey);
-    
-    if (defaultImage) {
-        return defaultImage;
+    const placeholderImage = getPlaceholderImage(selectedProduct.category, currentItem.service);
+    if (placeholderImage) {
+      return placeholderImage;
     }
 
     return {
@@ -112,6 +81,14 @@ export function OrderForm() {
 
 
   const total = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  useEffect(() => {
+    if (!currentItem.service || availableServices.includes(currentItem.service)) {
+      return;
+    }
+
+    setCurrentItem((prev) => ({ ...prev, service: availableServices[0] }));
+  }, [availableServices, currentItem.service]);
   
   const handleAddOrUpdateItem = () => {
     const product = products.find(p => p.id === currentItem.productId);
@@ -280,7 +257,7 @@ export function OrderForm() {
                                 <SelectValue placeholder="Seleziona un servizio" />
                               </SelectTrigger>
                               <SelectContent>
-                                {services.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                {availableServices.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                               </SelectContent>
                             </Select>
                         </div>

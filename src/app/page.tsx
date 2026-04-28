@@ -17,7 +17,7 @@ export default function Home() {
               Crea un nuovo ordine
             </CardTitle>
             <CardDescription className="mt-2 text-lg leading-8 text-muted-foreground">
-              Scegli la tua felpa e compila i tuoi dati.
+              Scegli felpa o maglia e compila i tuoi dati.
             </CardDescription>
           </CardHeader>
           <CardContent>

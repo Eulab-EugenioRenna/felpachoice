@@ -1,4 +1,4 @@
-export type SweatshirtType = 'default' | 'zip';
+export type ProductCategory = 'felpa' | 'maglia';
 export type ServiceType = 'basic' | 'premium';
 
 export interface Product {
@@ -7,7 +7,7 @@ export interface Product {
   price: number;
   imageUrl: string;
   imageHint: string;
-  category: 'sweatshirt' | 'jacket';
+  category: ProductCategory;
 }
 
 export interface OrderItem {
@@ -17,7 +17,7 @@ export interface OrderItem {
   price: number;
   size: string;
   service: string;
-  category: 'sweatshirt' | 'jacket';
+  category: ProductCategory;
 }
 
 export interface Order {
@@ -35,7 +35,7 @@ export interface Order {
     phone: string;
     notes?: string;
     // Legacy fields for backward compatibility
-    sweatshirtType?: SweatshirtType;
+    sweatshirtType?: string;
     size?: string;
     service?: string;
     price?: number;

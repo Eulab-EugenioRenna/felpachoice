@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { OrderCard } from './OrderCard';
 import type { Order } from '@/lib/types';
+import { getCategoryLabel } from '@/lib/catalog';
 import { Search, ListFilter, Briefcase, Ruler, X, ShoppingCart, Euro } from 'lucide-react';
 import {
   DropdownMenu,
@@ -64,10 +65,8 @@ export default function OrderListClient({ orders: initialOrders }: { orders: Ord
         if (order.request.service) serviceSummary[order.request.service] = (serviceSummary[order.request.service] || 0) + 1;
         if (order.request.size) sizeSummary[order.request.size] = (sizeSummary[order.request.size] || 0) + 1;
         
-        if (order.request.sweatshirtType === 'default') {
-          typeSet.add('sweatshirt');
-        } else if (order.request.sweatshirtType === 'zip') {
-          typeSet.add('jacket');
+        if (order.request.sweatshirtType) {
+          typeSet.add('felpa');
         }
 
       }
@@ -130,9 +129,7 @@ export default function OrderListClient({ orders: initialOrders }: { orders: Ord
             case 'service':
                 return order.request.service ? values.includes(order.request.service) : false;
             case 'type':
-                if (order.request.sweatshirtType === 'default' && values.includes('sweatshirt')) return true;
-                if (order.request.sweatshirtType === 'zip' && values.includes('jacket')) return true;
-                return false;
+                return values.includes('felpa');
             case 'brand':
                 // Legacy orders don't have brand info, so they don't match if brand filter is active
                 return false;
@@ -176,19 +173,19 @@ export default function OrderListClient({ orders: initialOrders }: { orders: Ord
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuLabel>{title}</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {options.map(option => (
+          <DropdownMenuLabel>{title}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {options.map(option => (
           <DropdownMenuCheckboxItem
             key={option}
             checked={filters[category].includes(option)}
             onSelect={(e) => e.preventDefault()}
             onCheckedChange={() => handleFilterChange(category, option)}
           >
-            {option}
-          </DropdownMenuCheckboxItem>
-        ))}
-      </DropdownMenuContent>
+              {category === 'type' ? getCategoryLabel(option as 'felpa' | 'maglia') : option}
+            </DropdownMenuCheckboxItem>
+          ))}
+        </DropdownMenuContent>
     </DropdownMenu>
   );
 

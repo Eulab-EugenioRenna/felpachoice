@@ -10,14 +10,15 @@ import {
   CardFooter,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import type { Order, OrderItem } from '@/lib/types';
+import type { Order } from '@/lib/types';
+import { getCategoryLabel, getLegacyCategoryLabel } from '@/lib/catalog';
 import { Shirt, User, Phone, Calendar, Tag, Briefcase, Ruler, ShoppingCart } from 'lucide-react';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { useState, useEffect } from 'react';
 
 const renderLegacyOrder = (order: Order) => {
-  const { name, phone, sweatshirtType, size, service, price } = order.request;
+  const { name, phone, size, service, price } = order.request;
   return (
     <>
       <CardHeader>
@@ -32,15 +33,15 @@ const renderLegacyOrder = (order: Order) => {
                     {phone}
                 </CardDescription>
             </div>
-             <Badge variant={sweatshirtType === 'default' ? 'secondary' : 'default'} className="whitespace-nowrap">
-                {sweatshirtType === 'default' ? 'Felpa' : 'Felpa+Giacca'}
-            </Badge>
+             <Badge variant="secondary" className="whitespace-nowrap">
+                {getLegacyCategoryLabel()}
+             </Badge>
         </div>
       </CardHeader>
       <CardContent className="flex-grow space-y-3">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Shirt className="w-4 h-4" />
-            <span>Tipo Felpa: <span className="font-semibold text-foreground">{sweatshirtType === 'default' ? 'Felpa Ufficiale' : 'Felpa Ufficiale + Giacca'}</span></span>
+            <span>Tipo Prodotto: <span className="font-semibold text-foreground">Felpa Ufficiale</span></span>
         </div>
          <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Ruler className="w-4 h-4" />
@@ -97,6 +98,7 @@ const renderNewOrder = (order: Order) => {
                         <div key={index} className="flex justify-between items-start text-sm p-2 border-l-4 border-accent rounded-r-md bg-muted/50">
                             <div>
                                 <p className="font-semibold">{item.productName} (x{item.quantity})</p>
+                                <p className="text-muted-foreground">Tipo: {getCategoryLabel(item.category)}</p>
                                 <p className="text-muted-foreground">Taglia: {item.size}, Servizio: {item.service}</p>
                             </div>
                             <p className="font-medium whitespace-nowrap">€{(item.price * item.quantity).toFixed(2)}</p>

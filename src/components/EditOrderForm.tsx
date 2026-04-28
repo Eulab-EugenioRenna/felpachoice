@@ -17,30 +17,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import type { Order, OrderItem, Product } from '@/lib/types';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
-
-const products: Product[] = [
-    {
-      id: 'jhk-sweatshirt',
-      name: 'Felpa Ufficiale - JHK',
-      price: 12,
-      imageUrl: '/images/default-sweatshirt.png',
-      imageHint: 'green sweatshirt',
-      category: 'sweatshirt',
-    },
-    {
-      id: 'payper-sweatshirt',
-      name: 'Felpa Ufficiale - PAYPER',
-      price: 15,
-      imageUrl: '/images/default-sweatshirt.png',
-      imageHint: 'green sweatshirt',
-      category: 'sweatshirt',
-    },
-];
-
-const services = ['media', 'welcome', 'security', 'kids'];
-const sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+import type { Order, OrderItem } from '@/lib/types';
+import { getPlaceholderImage, getServicesForCategory, products, sizes } from '@/lib/catalog';
 
 export function EditOrderForm({ order, onUpdateSuccess }: { order: Order, onUpdateSuccess: (updatedOrder: Order) => void }) {
   const { toast } = useToast();
@@ -63,21 +41,25 @@ export function EditOrderForm({ order, onUpdateSuccess }: { order: Order, onUpda
     return products.find(p => p.id === currentItem.productId);
   }, [currentItem.productId]);
 
+  const availableServices = useMemo(() => {
+    return getServicesForCategory(selectedProduct?.category ?? 'felpa');
+  }, [selectedProduct]);
+
   const currentImage = useMemo(() => {
     if (!selectedProduct) return null;
-    const service = currentItem.service;
-    if (service) {
-      const category = selectedProduct.category === 'jacket' ? 'zip' : 'default';
-      const imageKey = `${category}-${service}`;
-      const serviceImage = PlaceHolderImages.find(img => img.id === imageKey);
-      if (serviceImage) return serviceImage;
-    }
-    const defaultImageKey = selectedProduct.category === 'jacket' ? 'zip-none' : 'default-none';
-    const defaultImage = PlaceHolderImages.find(img => img.id === defaultImageKey);
-    return defaultImage || { imageUrl: selectedProduct.imageUrl, imageHint: selectedProduct.imageHint, description: selectedProduct.name };
+    const placeholderImage = getPlaceholderImage(selectedProduct.category, currentItem.service);
+    return placeholderImage || { imageUrl: selectedProduct.imageUrl, imageHint: selectedProduct.imageHint, description: selectedProduct.name };
   }, [currentItem.service, selectedProduct]);
 
   const total = orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  useEffect(() => {
+    if (!currentItem.service || availableServices.includes(currentItem.service)) {
+      return;
+    }
+
+    setCurrentItem((prev) => ({ ...prev, service: availableServices[0] }));
+  }, [availableServices, currentItem.service]);
   
   const handleAddOrUpdateItem = () => {
     const product = products.find(p => p.id === currentItem.productId);
@@ -216,7 +198,7 @@ export function EditOrderForm({ order, onUpdateSuccess }: { order: Order, onUpda
                             <Label htmlFor="service-current" className="font-semibold mb-2 block">Servizio Svolto</Label>
                             <Select name="service-current" value={currentItem.service} onValueChange={(value) => setCurrentItem(prev => ({...prev, service: value}))}>
                               <SelectTrigger className="h-12"><SelectValue /></SelectTrigger>
-                              <SelectContent>{services.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                              <SelectContent>{availableServices.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                             </Select>
                         </div>
                     </div>

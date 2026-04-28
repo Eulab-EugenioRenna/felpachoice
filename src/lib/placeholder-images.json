@@ -1,64 +1,94 @@
 {
   "placeholderImages": [
     {
-      "id": "default-media",
-      "description": "Una felpa standard di colore verde per il servizio media.",
-      "imageUrl": "/images/default-media-sweatshirt.png",
-      "imageHint": "green sweatshirt camera"
+      "id": "felpa-media",
+      "description": "Una felpa per il servizio media.",
+      "imageUrl": "/images/felpa_media.jpg",
+      "imageHint": "sweatshirt media service"
     },
     {
-      "id": "zip-media",
-      "description": "Una felpa con cerniera di colore blu scuro per il servizio media.",
-      "imageUrl": "/images/zip-media-sweatshirt.png",
-      "imageHint": "zip sweatshirt camera"
-    },
-    {
-      "id": "default-welcome",
-      "description": "Una felpa standard di colore verde per il servizio welcome.",
+      "id": "felpa-welcome",
+      "description": "Una felpa per il servizio welcome.",
       "imageUrl": "/images/default-welcome-sweatshirt.png",
-      "imageHint": "green sweatshirt handshake"
+      "imageHint": "sweatshirt welcome service"
     },
     {
-      "id": "zip-welcome",
-      "description": "Una felpa con cerniera di colore blu scuro per il servizio welcome.",
-      "imageUrl": "/images/zip-welcome-sweatshirt.png",
-      "imageHint": "zip sweatshirt handshake"
+      "id": "felpa-security",
+      "description": "Una felpa per il servizio security.",
+      "imageUrl": "/images/felpa_security.jpg",
+      "imageHint": "sweatshirt security service"
     },
     {
-      "id": "default-security",
-      "description": "Una felpa standard di colore verde per il servizio security.",
-      "imageUrl": "/images/default-security-sweatshirt.png",
-      "imageHint": "green sweatshirt shield"
-    },
-    {
-      "id": "zip-security",
-      "description": "Una felpa con cerniera di colore blu scuro per il servizio security.",
-      "imageUrl": "/images/zip-security-sweatshirt.png",
-      "imageHint": "zip sweatshirt shield"
-    },
-    {
-      "id": "default-kids",
-      "description": "Una felpa standard di colore verde per il servizio kids.",
+      "id": "felpa-kids",
+      "description": "Una felpa per il servizio kids.",
       "imageUrl": "/images/default-kids-sweatshirt.png",
-      "imageHint": "green sweatshirt balloon"
+      "imageHint": "sweatshirt kids service"
     },
     {
-      "id": "zip-kids",
-      "description": "Una felpa con cerniera di colore blu scuro per il servizio kids.",
-      "imageUrl": "/images/zip-kids-sweatshirt.png",
-      "imageHint": "zip sweatshirt balloon"
+      "id": "felpa-libreria",
+      "description": "Una felpa per il servizio libreria.",
+      "imageUrl": "/images/felpa_libreria.jpg",
+      "imageHint": "sweatshirt library service"
     },
     {
-      "id": "default-none",
-      "description": "Una felpa standard di colore verde.",
+      "id": "felpa-cleaner",
+      "description": "Una felpa per il servizio cleaner.",
+      "imageUrl": "/images/felpa_cleaner.jpg",
+      "imageHint": "sweatshirt cleaner service"
+    },
+    {
+      "id": "felpa-none",
+      "description": "Una felpa ufficiale.",
       "imageUrl": "/images/default-sweatshirt.png",
-      "imageHint": "green sweatshirt"
+      "imageHint": "official sweatshirt"
     },
     {
-      "id": "zip-none",
-      "description": "Una felpa di colore blu scuro con cerniera.",
-      "imageUrl": "/images/zip-sweatshirt.png",
-      "imageHint": "zip sweatshirt"
+      "id": "maglia-media",
+      "description": "Una maglia per il servizio media.",
+      "imageUrl": "/images/maglia_media.jpg",
+      "imageHint": "tshirt media service"
+    },
+    {
+      "id": "maglia-welcome",
+      "description": "Una maglia per il servizio welcome.",
+      "imageUrl": "/images/maglia_welcome.jpg",
+      "imageHint": "tshirt welcome service"
+    },
+    {
+      "id": "maglia-security",
+      "description": "Una maglia per il servizio security.",
+      "imageUrl": "/images/maglia_security.jpg",
+      "imageHint": "tshirt security service"
+    },
+    {
+      "id": "maglia-kids",
+      "description": "Una maglia per il servizio kids.",
+      "imageUrl": "/images/maglia_kids.jpg",
+      "imageHint": "tshirt kids service"
+    },
+    {
+      "id": "maglia-libreria",
+      "description": "Una maglia per il servizio libreria.",
+      "imageUrl": "/images/maglia_libreria.jpg",
+      "imageHint": "tshirt library service"
+    },
+    {
+      "id": "maglia-cleaner",
+      "description": "Una maglia per il servizio cleaner.",
+      "imageUrl": "/images/maglia_cleaner.jpg",
+      "imageHint": "tshirt cleaner service"
+    },
+    {
+      "id": "maglia-battesimi",
+      "description": "Una maglia per il servizio battesimi.",
+      "imageUrl": "/images/maglia_battesimi.jpg",
+      "imageHint": "tshirt baptism service"
+    },
+    {
+      "id": "maglia-none",
+      "description": "Una maglia ufficiale.",
+      "imageUrl": "/images/maglia_media.jpg",
+      "imageHint": "official tshirt"
     }
   ]
 }
