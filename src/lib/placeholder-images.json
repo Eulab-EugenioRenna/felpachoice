@@ -7,6 +7,12 @@
       "imageHint": "sweatshirt media service"
     },
     {
+      "id": "felpa-army",
+      "description": "Una felpa per il servizio army.",
+      "imageUrl": "/images/felpa_army.jpg",
+      "imageHint": "sweatshirt army service"
+    },
+    {
       "id": "felpa-welcome",
       "description": "Una felpa per il servizio welcome.",
       "imageUrl": "/images/default-welcome-sweatshirt.png",
@@ -47,6 +53,12 @@
       "description": "Una maglia per il servizio media.",
       "imageUrl": "/images/maglia_media.jpg",
       "imageHint": "tshirt media service"
+    },
+    {
+      "id": "maglia-army",
+      "description": "Una maglia per il servizio army.",
+      "imageUrl": "/images/maglia_army.jpg",
+      "imageHint": "tshirt army service"
     },
     {
       "id": "maglia-welcome",

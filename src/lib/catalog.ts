@@ -30,6 +30,7 @@ export const products: Product[] = [
 
 export const services = [
   'media',
+  'army',
   'welcome',
   'security',
   'kids',
