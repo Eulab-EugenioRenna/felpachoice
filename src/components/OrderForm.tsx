@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { OrderItem } from '@/lib/types';
-import { getPlaceholderImage, getServicesForProduct, isServiceAllowedForProduct, products, sizes } from '@/lib/catalog';
+import { getPlaceholderImage, getProductPrice, getServicesForProduct, isServiceAllowedForProduct, products, sizes } from '@/lib/catalog';
 
 function SubmitButton({ onClick }: { onClick: (e: React.MouseEvent<HTMLButtonElement>) => void }) {
   const [pending, setPending] = useState(false);
@@ -110,7 +110,7 @@ export function OrderForm() {
       ...currentItem,
       productId: product.id,
       productName: product.name,
-      price: product.price,
+      price: product.id === 'official-tshirt' && currentItem.service === 'army' ? 7 : product.price,
       quantity: currentItem.quantity,
       size: currentItem.size,
       service: currentItem.service,
@@ -230,7 +230,7 @@ export function OrderForm() {
                                 <SelectValue placeholder="Seleziona un prodotto" />
                               </SelectTrigger>
                               <SelectContent>
-                                  {products.map(p => <SelectItem key={p.id} value={p.id}>{p.name} - €{p.price.toFixed(2)}</SelectItem>)}
+                                  {products.map(p => <SelectItem key={p.id} value={p.id}>{p.name} - €{getProductPrice(p, currentItem.service).toFixed(2)}</SelectItem>)}
                               </SelectContent>
                           </Select>
                       </div>

@@ -94,6 +94,15 @@ export function isServiceAllowedForProduct(service: string, product?: Product | 
   return allowed.includes(service);
 }
 
+export function getProductPrice(product: Product | string, service?: string): number {
+  const prod = typeof product === 'string' ? products.find((p) => p.id === product) : product;
+  if (!prod) return 0;
+  if (prod.id === 'official-tshirt' && service === 'army') {
+    return 7;
+  }
+  return prod.price;
+}
+
 export function normalizeProductCategory(category?: string): ProductCategory {
   return category === 'maglia' || category === 'tshirt' ? 'maglia' : 'felpa';
 }

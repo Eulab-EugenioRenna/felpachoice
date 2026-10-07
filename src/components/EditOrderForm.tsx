@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import type { Order, OrderItem } from '@/lib/types';
-import { getPlaceholderImage, getServicesForProduct, isServiceAllowedForProduct, products, sizes } from '@/lib/catalog';
+import { getPlaceholderImage, getProductPrice, getServicesForProduct, isServiceAllowedForProduct, products, sizes } from '@/lib/catalog';
 
 export function EditOrderForm({ order, onUpdateSuccess }: { order: Order, onUpdateSuccess: (updatedOrder: Order) => void }) {
   const { toast } = useToast();
@@ -80,7 +80,7 @@ export function EditOrderForm({ order, onUpdateSuccess }: { order: Order, onUpda
     const newItem: OrderItem = {
       productId: product.id,
       productName: product.name,
-      price: product.price,
+      price: product.id === 'official-tshirt' && currentItem.service === 'army' ? 7 : product.price,
       quantity: currentItem.quantity || 1,
       size: currentItem.size,
       service: currentItem.service,
@@ -187,7 +187,7 @@ export function EditOrderForm({ order, onUpdateSuccess }: { order: Order, onUpda
                           <Label htmlFor="product" className="font-semibold mb-2 block">Prodotto</Label>
                           <Select name="product" value={currentItem.productId} onValueChange={(value) => setCurrentItem(prev => ({...prev, productId: value}))}>
                               <SelectTrigger className="h-12"><SelectValue /></SelectTrigger>
-                              <SelectContent>{products.map(p => <SelectItem key={p.id} value={p.id}>{p.name} - €{p.price.toFixed(2)}</SelectItem>)}</SelectContent>
+                              <SelectContent>{products.map(p => <SelectItem key={p.id} value={p.id}>{p.name} - €{getProductPrice(p, currentItem.service).toFixed(2)}</SelectItem>)}</SelectContent>
                           </Select>
                       </div>
                        <div>
