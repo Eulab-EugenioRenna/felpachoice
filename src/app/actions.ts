@@ -15,7 +15,17 @@ const orderItemSchema = z.object({
   size: z.string(),
   service: z.string(),
   category: z.string(),
-});
+}).refine(
+  (item) => !(item.service === 'army' && item.productId === 'jhk-sweatshirt'),
+  {
+    message: 'Per il servizio Army sono disponibili solo la maglia e la felpa da 15€.',
+  }
+).refine(
+  (item) => !(item.service === 'battesimi' && item.category === 'felpa'),
+  {
+    message: 'Per il servizio Battesimi è disponibile solo la maglia.',
+  }
+);
 
 const orderSchema = z.object({
   name: z.string().min(2, { message: 'Il nome è obbligatorio.' }),

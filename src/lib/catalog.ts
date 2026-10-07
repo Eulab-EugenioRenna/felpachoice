@@ -61,6 +61,39 @@ export function getServicesForCategory(category: ProductCategory) {
   return servicesByCategory[category];
 }
 
+export function getServicesForProduct(product?: Product | string | null): string[] {
+  if (!product) {
+    return services;
+  }
+
+  const prod = typeof product === 'string'
+    ? products.find((p) => p.id === product)
+    : product;
+
+  if (!prod) {
+    if (product === 'felpa' || product === 'maglia') {
+      return getServicesForCategory(product);
+    }
+    return services;
+  }
+
+  // Per il servizio Army sono disponibili solo la maglia e la felpa da 15€ (PAYPER)
+  if (prod.id === 'jhk-sweatshirt') {
+    return services.filter((service) => service !== 'battesimi' && service !== 'army');
+  }
+
+  if (prod.category === 'felpa') {
+    return services.filter((service) => service !== 'battesimi');
+  }
+
+  return services;
+}
+
+export function isServiceAllowedForProduct(service: string, product?: Product | string | null): boolean {
+  const allowed = getServicesForProduct(product);
+  return allowed.includes(service);
+}
+
 export function normalizeProductCategory(category?: string): ProductCategory {
   return category === 'maglia' || category === 'tshirt' ? 'maglia' : 'felpa';
 }

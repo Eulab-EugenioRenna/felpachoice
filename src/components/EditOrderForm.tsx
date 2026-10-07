@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import type { Order, OrderItem } from '@/lib/types';
-import { getPlaceholderImage, getServicesForCategory, products, sizes } from '@/lib/catalog';
+import { getPlaceholderImage, getServicesForProduct, isServiceAllowedForProduct, products, sizes } from '@/lib/catalog';
 
 export function EditOrderForm({ order, onUpdateSuccess }: { order: Order, onUpdateSuccess: (updatedOrder: Order) => void }) {
   const { toast } = useToast();
@@ -42,7 +42,7 @@ export function EditOrderForm({ order, onUpdateSuccess }: { order: Order, onUpda
   }, [currentItem.productId]);
 
   const availableServices = useMemo(() => {
-    return getServicesForCategory(selectedProduct?.category ?? 'felpa');
+    return getServicesForProduct(selectedProduct);
   }, [selectedProduct]);
 
   const currentImage = useMemo(() => {
@@ -66,6 +66,15 @@ export function EditOrderForm({ order, onUpdateSuccess }: { order: Order, onUpda
     if (!product || !currentItem.size || !currentItem.service || !currentItem.quantity) {
         toast({ title: "Campi incompleti", description: "Seleziona prodotto, taglia, servizio e quantità.", variant: "destructive"});
         return;
+    }
+
+    if (!isServiceAllowedForProduct(currentItem.service, product)) {
+      toast({
+        title: "Combinazione non valida",
+        description: "Per il servizio Army sono disponibili solo la maglia e la felpa da 15€.",
+        variant: "destructive",
+      });
+      return;
     }
 
     const newItem: OrderItem = {
