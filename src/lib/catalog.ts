@@ -61,6 +61,17 @@ export function getServicesForCategory(category: ProductCategory) {
   return servicesByCategory[category];
 }
 
+export function getProductsForService(service?: string): Product[] {
+  if (service === 'army') {
+    // Su army lasciamo solo maglia e felpa da 15€ (PAYPER)
+    return products.filter((p) => p.id === 'payper-sweatshirt' || p.id === 'official-tshirt');
+  }
+  if (service === 'battesimi') {
+    return products.filter((p) => p.category === 'maglia');
+  }
+  return products;
+}
+
 export function getServicesForProduct(product?: Product | string | null): string[] {
   if (!product) {
     return services;
@@ -77,11 +88,6 @@ export function getServicesForProduct(product?: Product | string | null): string
     return services;
   }
 
-  // Per il servizio Army sono disponibili solo la maglia e la felpa da 15€ (PAYPER)
-  if (prod.id === 'jhk-sweatshirt') {
-    return services.filter((service) => service !== 'battesimi' && service !== 'army');
-  }
-
   if (prod.category === 'felpa') {
     return services.filter((service) => service !== 'battesimi');
   }
@@ -90,8 +96,19 @@ export function getServicesForProduct(product?: Product | string | null): string
 }
 
 export function isServiceAllowedForProduct(service: string, product?: Product | string | null): boolean {
-  const allowed = getServicesForProduct(product);
-  return allowed.includes(service);
+  const prod = typeof product === 'string'
+    ? products.find((p) => p.id === product)
+    : product;
+
+  if (!prod) return true;
+
+  if (service === 'army' && prod.id === 'jhk-sweatshirt') {
+    return false;
+  }
+  if (service === 'battesimi' && prod.category === 'felpa') {
+    return false;
+  }
+  return true;
 }
 
 export function getProductPrice(product: Product | string, service?: string): number {

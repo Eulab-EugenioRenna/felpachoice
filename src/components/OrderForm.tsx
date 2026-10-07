@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import type { OrderItem } from '@/lib/types';
-import { getPlaceholderImage, getProductPrice, getServicesForProduct, isServiceAllowedForProduct, products, sizes } from '@/lib/catalog';
+import { getPlaceholderImage, getProductPrice, getProductsForService, getServicesForProduct, isServiceAllowedForProduct, products, sizes } from '@/lib/catalog';
 
 function SubmitButton({ onClick }: { onClick: (e: React.MouseEvent<HTMLButtonElement>) => void }) {
   const [pending, setPending] = useState(false);
@@ -56,6 +56,10 @@ export function OrderForm() {
     service: 'media',
   });
 
+  const availableProducts = useMemo(() => {
+    return getProductsForService(currentItem.service);
+  }, [currentItem.service]);
+
   const selectedProduct = useMemo(() => {
     return products.find(p => p.id === currentItem.productId);
   }, [currentItem.productId]);
@@ -89,6 +93,12 @@ export function OrderForm() {
 
     setCurrentItem((prev) => ({ ...prev, service: availableServices[0] }));
   }, [availableServices, currentItem.service]);
+
+  useEffect(() => {
+    if (currentItem.productId && !availableProducts.some(p => p.id === currentItem.productId)) {
+      setCurrentItem((prev) => ({ ...prev, productId: availableProducts[0]?.id }));
+    }
+  }, [availableProducts, currentItem.productId]);
   
   const handleAddOrUpdateItem = () => {
     const product = products.find(p => p.id === currentItem.productId);
@@ -230,7 +240,7 @@ export function OrderForm() {
                                 <SelectValue placeholder="Seleziona un prodotto" />
                               </SelectTrigger>
                               <SelectContent>
-                                  {products.map(p => <SelectItem key={p.id} value={p.id}>{p.name} - €{getProductPrice(p, currentItem.service).toFixed(2)}</SelectItem>)}
+                                  {availableProducts.map(p => <SelectItem key={p.id} value={p.id}>{p.name} - €{getProductPrice(p, currentItem.service).toFixed(2)}</SelectItem>)}
                               </SelectContent>
                           </Select>
                       </div>
@@ -261,7 +271,17 @@ export function OrderForm() {
                         </div>
                         <div>
                             <Label htmlFor="service-current" className="font-semibold mb-2 block">Servizio Svolto</Label>
-                            <Select name="service-current" value={currentItem.service} onValueChange={(value) => setCurrentItem(prev => ({...prev, service: value}))}>
+                            <Select
+                              name="service-current"
+                              value={currentItem.service}
+                              onValueChange={(value) => {
+                                if (value === 'army' && currentItem.productId === 'jhk-sweatshirt') {
+                                  setCurrentItem(prev => ({ ...prev, service: value, productId: 'payper-sweatshirt' }));
+                                } else {
+                                  setCurrentItem(prev => ({ ...prev, service: value }));
+                                }
+                              }}
+                            >
                               <SelectTrigger className="h-12">
                                 <SelectValue placeholder="Seleziona un servizio" />
                               </SelectTrigger>
